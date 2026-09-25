@@ -8,6 +8,9 @@
 #include "game/records_internal.h"
 #include "game/state.h"
 
+u8 g_TeamNameLength;
+u8 g_TeamNameChars[16];
+static s32 s_insertedRow;
 s32 g_AnimTimer;
 static RecordEntry s_state;
 s32 g_CourseIndex;
@@ -48,7 +51,7 @@ s32 InsertRaceRecord(RaceRecord records[RECORD_TABLE_LENGTH], s32 raceTime,
     (void)raceTime;
     (void)carIndex;
     (void)nameCodes;
-    return RECORD_TABLE_LENGTH;
+    return s_insertedRow;
 }
 
 void WriteRecordDriverName(RaceRecord *record, const u8 *nameCodes) {
@@ -113,6 +116,8 @@ static void Reset(void) {
     memset(g_RankingNameCodes, 0, sizeof(g_RankingNameCodes));
     memset(g_TimeRecordNameCodes, 0, sizeof(g_TimeRecordNameCodes));
     g_AnimTimer = 0;
+    s_insertedRow = RECORD_TABLE_LENGTH;
+    memset(g_RankingNameCodes, 11, sizeof(g_RankingNameCodes));
     g_GrandPrixSeries = 0;
     s_state.nameCharacter = 0;
     s_state.nameCursor = 4;
@@ -136,6 +141,31 @@ static void Reset(void) {
 }
 
 int main(void) {
+    /* The selected team seeds both records, and entry starts on its first
+     * character instead of silently replacing that character with 'A'. */
+    Reset();
+    s_insertedRow = 0;
+    g_TeamNameLength = 3;
+    g_TeamNameChars[0] = 24; /* N */
+    g_TeamNameChars[1] = 11; /* A */
+    g_TeamNameChars[2] = 255; /* damaged save: space */
+    EnterRecordEntry();
+    CHECK(s_writeCount == 2);
+    CHECK(memcmp(g_RankingNameCodes, (u8[]){24, 11, 10, 10, 10, 10}, 6) == 0);
+    CHECK(memcmp(g_RankingNameCodes, g_TimeRecordNameCodes, 6) == 0);
+    g_SceneTimer = 8;
+    UpdateRecordEntry();
+    CHECK(s_state.nameCharacter == 24 && s_state.nameCursor == 0);
+    Reset();
+    s_insertedRow = 0;
+    g_TeamNameLength = 16;
+    memset(g_TeamNameChars, 20, sizeof(g_TeamNameChars));
+    EnterRecordEntry();
+    CHECK(memcmp(g_RankingNameCodes, (u8[]){20, 20, 20, 20, 20, 20}, 6) == 0);
+    g_TeamNameLength = 0;
+    EnterRecordEntry();
+    CHECK(memcmp(g_RankingNameCodes, (u8[]){10, 10, 10, 10, 10, 10}, 6) == 0);
+
     Reset();
     g_GrandPrixSeries = -1;
     EnterRecordEntry();

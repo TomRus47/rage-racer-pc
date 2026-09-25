@@ -21,7 +21,10 @@ static SoundOption s_screen;
 static u8 s_packets[128];
 static s32 s_applyCalls;
 static s32 s_lastCue;
+static s32 s_labelPage;
+static GameOrderingTableEntry *s_labelOt;
 static s32 s_spriteCount;
+static u8 *s_firstLabel;
 static s32 s_spriteY[3];
 static s32 s_spriteU[3];
 static s32 s_spriteV[3];
@@ -32,6 +35,7 @@ static s32 s_volumeLevels[2];
 void DrawMenuCursorArrow(s32 x, s32 y) {
     (void)x;
     (void)y;
+    g_RenderState.draw.packetCursor += 8;
 }
 void DrawOptionHintBar(s32 variant) { (void)variant; }
 void ApplyAudioSettings(void) { s_applyCalls++; }
@@ -47,11 +51,18 @@ u8 *GameQueueSpriteTrans(GameOrderingTableEntry *ot, u8 *prim, s32 x, s32 y, s32
     (void)x;
     (void)width;
     (void)height;
+    if (s_spriteCount == 0) s_firstLabel = prim;
+    s_labelOt = ot;
     s_spriteY[s_spriteCount] = y;
     s_spriteU[s_spriteCount] = u;
     s_spriteV[s_spriteCount] = v;
     s_spriteCount++;
     (void)clut;
+    return prim + 1;
+}
+
+u8 *QueueDrawModePrim(GameOrderingTableEntry *ot, u8 *prim, s32 tpage) {
+    if (ot == s_labelOt) s_labelPage = tpage;
     return prim + 1;
 }
 
@@ -107,6 +118,8 @@ int main(void) {
     Reset();
     UpdateSoundOptionMenuState(&s_screen);
     CHECK(s_spriteCount == 3);
+    CHECK(s_firstLabel == s_packets + 8);
+    CHECK(s_labelOt == GamePrimaryOrderingTable(51) && s_labelPage == 0x3F);
     CHECK(s_spriteY[2] == 0x78 && s_spriteU[2] == 0xD0 &&
           s_spriteV[2] == 0x60);
     CHECK(s_volumeCalls == 2 && s_volumeLevels[0] == 7 &&

@@ -43,16 +43,18 @@ static void NormalizeSoundSettings(void) {
 
 static void DrawSoundOptionScreen(const SoundOption *screen) {
     GameOrderingTableEntry *ot = GamePrimaryOrderingTable(0);
-    u8 *next = RENDER_PRIM_CURSOR_AS(u8);
+    GameOrderingTableEntry *labels = GamePrimaryOrderingTable(51);
+    u8 *next;
 
     DrawMenuCursorArrow(0x14, screen->cursor * 32 + 56);
-    next = GameQueueSpriteTrans(ot, next, 0x24, 0x38, 0x2C, 0x18, 0x9C,
+    next = RENDER_PRIM_CURSOR_AS(u8);
+    next = GameQueueSpriteTrans(labels, next, 0x24, 0x38, 0x2C, 0x18, 0x9C,
                                 0x78, 0x7F40);
-    next = GameQueueSpriteTrans(ot, next, 0x24, 0x58, 0x18, 0x18, 0xC8,
+    next = GameQueueSpriteTrans(labels, next, 0x24, 0x58, 0x18, 0x18, 0xC8,
                                 0x78, 0x7F40);
-    next = GameQueueSpriteTrans(ot, next, 0x24, 0x78, 0x1C, 0x18, 0xD0,
+    next = GameQueueSpriteTrans(labels, next, 0x24, 0x78, 0x1C, 0x18, 0xD0,
                                 0x60, 0x7F40);
-    g_RenderState.draw.packetCursor = next;
+    g_RenderState.draw.packetCursor = QueueDrawModePrim(labels, next, 0x3F);
 
     DrawOptionHintBar(MENU_OPTION_HINT_SOUND);
     DrawVolumeBar(g_BgmVolumeSetting, 0xD0);

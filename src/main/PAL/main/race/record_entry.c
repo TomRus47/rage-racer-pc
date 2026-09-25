@@ -5,6 +5,8 @@
 #include "game/cd.h"
 #include "game/player_car_internal.h"
 #include "game/race.h"
+#include "game/menu.h"
+#include "game/memcard.h"
 #include "game/records_internal.h"
 #include "game/race_internal.h"
 #include "game/render.h"
@@ -21,9 +23,17 @@ enum {
     RECORD_ENTRY_FADE_OUT_STEP = 2,
     RECORD_ENTRY_PANEL_WIDTH = 0x140,
     RECORD_ENTRY_PANEL_STEP = 8,
-    DEFAULT_NAME_ENTRY_CHARACTER = 0xB,
+    NAME_ENTRY_SPACE = 10,
     RECORD_ENTRY_MUSIC_FADE = 0x78,
 };
+
+static void SeedTeamName(RaceRecord *record, u8 *nameCodes) {
+    for (s32 i = 0; i < RECORD_NAME_LENGTH; i++) {
+        u8 code = i < g_TeamNameLength ? g_TeamNameChars[i] : NAME_ENTRY_SPACE;
+        nameCodes[i] = code < SAVE_NAME_CHARACTER_COUNT ? code : NAME_ENTRY_SPACE;
+    }
+    WriteRecordDriverName(record, nameCodes);
+}
 
 static void InsertRaceRecords(RecordEntry *state) {
     FastestLap fastestLap;
@@ -48,6 +58,12 @@ static void InsertRaceRecords(RecordEntry *state) {
     state->timeRow = InsertRaceRecord(
         g_TimeRecords[g_GrandPrixSeries][course], g_RaceTotalTime,
         g_PlayerCarIndex, g_TimeRecordNameCodes);
+    if (state->rankingRow < RECORD_TABLE_LENGTH)
+        SeedTeamName(&g_RankingRecords[g_GrandPrixSeries][course][state->rankingRow],
+                     g_RankingNameCodes);
+    if (state->timeRow < RECORD_TABLE_LENGTH)
+        SeedTeamName(&g_TimeRecords[g_GrandPrixSeries][course][state->timeRow],
+                     g_TimeRecordNameCodes);
 }
 
 void EnterRecordEntry(void) {
@@ -84,7 +100,7 @@ static void UpdateRecordEntryFadeIn(RecordEntry *state) {
             StartCdAudio();
         }
         if (RecordWasInserted(state->rankingRow)) {
-            state->nameCharacter = DEFAULT_NAME_ENTRY_CHARACTER;
+            state->nameCharacter = g_RankingNameCodes[0];
             state->nameCursor = 0;
             state->step = RECORD_ENTRY_STATE_EDIT_LAP_NAME;
         } else {
