@@ -12,6 +12,7 @@ foreach(cpu false true)
         --set start.player_track_point=150 --set start.freeze=true
         --set video.internal_scale=1 --set video.fps=1000 --set modern.ray_tracing=off
         --set "diagnostics.modern_cpu_geometry=${cpu}" --set diagnostics.performance_trace=true
+        --set diagnostics.modern_asset_trace=true
         --set stop.timer=600 --set run.frames=3000
         --set "diagnostics.modern_dump=${root}/${cpu}.ppm"
         --set diagnostics.modern_dump_scene_id=12 --set diagnostics.modern_dump_timer=550
