@@ -2,6 +2,8 @@
 #include "game/asset.h"
 #include "game/audio.h"
 #include "game/car.h"
+#include "car_catalog.h"
+#include "game/menu.h"
 #include "game/race.h"
 #include "game/render.h"
 #include "game/render_internal.h"
@@ -37,13 +39,11 @@ const EnvironmentPalette *g_EnvPaletteTable;
 const CourseObject *g_CourseObjects;
 s32 g_CourseObjectCount;
 
-/* Catalog override behavior is exercised by port_car_catalog_tests. */
-void CarCatalogApplySpecification(int modelIndex, int grade,
-                                  GameCarSpec *specification) {
-    (void)modelIndex;
-    (void)grade;
-    (void)specification;
-}
+s32 g_CarPriceTable[CAR_PRICE_COUNT];
+s32 g_CarTuneUpPriceTable[CAR_TUNE_UP_PRICE_COUNT];
+const char *g_NativeCarNames[GAME_CAR_COUNT];
+const char *g_NativeCarClassNames[GAME_CAR_COUNT];
+void SetCarMaker(s32 model, const char *name) { (void)model; (void)name; }
 
 static s32 s_loadResult;
 static s32 s_loadAssetIndex;
@@ -250,7 +250,7 @@ static void TestVoiceAndCarPhases(void) {
     u8 destination[4096];
     GameCarSpec sourceSpecSnapshot;
     s32 *offsets = (s32 *)(void *)destination;
-    CarEntry cars[2];
+    CarEntry cars[GAME_CAR_COUNT];
     const s32 specificationOffset = 64;
     const s32 audioHeaderOffset =
         specificationOffset + (s32)sizeof(GameCarSpec);
@@ -433,6 +433,43 @@ static void TestVoiceAndCarPhases(void) {
     Check(g_AssetLoadCursor == destination + audioBodyOffset &&
               g_AssetLoadState == 4,
           "car phase advances to audio wait");
+    /* The same Pegase grade must use the same override in normal and Extra
+     * GP. Loading a race exercises the real catalog, not a no-op stub. */
+    static const char profile[] =
+        "[[cars]]\nid=\"car_02_g0\"\nmodel=2\ngrade=0\nmanual_only=false\n"
+        "shift_points=[408,544,465,621,557,743,673,898,826,1102,1008,1345]\n"
+        "[[cars]]\nid=\"car_02_g1\"\nmodel=2\ngrade=1\nmanual_only=false\n"
+        "shift_points=[477,637,567,756,702,937,854,1139,1005,1341,1196,1595]\n";
+    const char *path = "race_assets_pegase.toml";
+    FILE *file = fopen(path, "wb");
+    char error[256];
+    Check(file != NULL, "can create Pegase catalog fixture");
+    if (!file) return;
+    fwrite(profile, 1, sizeof(profile) - 1, file);
+    fclose(file);
+    Check(CarCatalogLoadFile(path, error, sizeof(error)), "Pegase profile loads");
+    remove(path);
+    g_PlayerCarIndex = 2;
+    for (int series = 0; series < 2; ++series) {
+        g_GrandPrixSeries = series;
+        for (int grade = 0; grade < 2; ++grade) {
+            cars[2].modelVariant = grade;
+            cars[2].transmission = 0;
+            g_AssetLoadCursor = destination;
+            g_AssetLoadState = 3;
+            s_uploadCount = 0;
+            LoadRaceAssets();
+            Check(g_CarSpec->shiftPoints[0].upshiftSpeed == (grade ? 637 : 544),
+                  "GP and Extra GP select the configured Pegase grade");
+            Check(g_CarSpec->shiftPoints[5].upshiftSpeed == (grade ? 1595 : 1345),
+                  "all Pegase gears retain catalog thresholds");
+            Check(memcmp(destination + specificationOffset, &sourceSpecSnapshot,
+                         sizeof(sourceSpecSnapshot)) == 0,
+                  "catalog does not overwrite disc data");
+        }
+    }
+    CarCatalogClearOverrides();
+    g_GrandPrixSeries = 0;
 }
 
 static void TestTrackPhases(void) {

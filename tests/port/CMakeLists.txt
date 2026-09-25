@@ -529,6 +529,7 @@ set_tests_properties(audio_settings PROPERTIES LABELS unit)
 
 add_executable(race_asset_loading_tests
     race_asset_loading_tests.c
+    ${CMAKE_SOURCE_DIR}/src/port/car_catalog.c
     ${CMAKE_SOURCE_DIR}/src/main/PAL/main/asset/asset_request.c
     ${CMAKE_SOURCE_DIR}/src/main/PAL/main/asset/race_assets.c
     ${CMAKE_SOURCE_DIR}/src/main/PAL/main/asset/track_data_assets.c
