@@ -548,7 +548,10 @@ float CarLampIntensity(const CarLights *state, LampKind kind) {
     return 0;
 }
 
-void RenderCarSpotLights(RenderWorld *world) {
+void RenderCarSpotLightsWithSettings(RenderWorld *world, float pitchDegrees,
+                                     float cockpitRecess) {
+    float pitch = fmaxf(0.0f, fminf(pitchDegrees, 45.0f)) *
+                  (3.14159265358979323846f / 180.0f);
     for (uint32_t i = 0; i < world->instanceCount; ++i) {
         const RenderMeshInstance *body = &world->instances[i];
         const Lamp *lamps;
@@ -562,9 +565,14 @@ void RenderCarSpotLights(RenderWorld *world) {
             if (strength <= 0) continue;
             int front = lamp->kind == LAMP_HEAD;
             SpotLight light = {0};
-            light.position = RenderTransformInstancePoint(&transform, lamp->position);
+            Vec3 lampPosition = lamp->position;
+            if (front && world->camera.inCarView &&
+                body->entity == RAGE_RENDER_PLAYER_CAR_ENTITY)
+                lampPosition.z -= fmaxf(0.0f, cockpitRecess);
+            light.position = RenderTransformInstancePoint(&transform, lampPosition);
             light.direction = RenderRotateInstanceVector(&transform,
-                (Vec3){0, front ? -0.12f : -0.06f, front ? 1.0f : -1.0f});
+                (Vec3){0, front ? sinf(pitch) : -0.06f,
+                       front ? cosf(pitch) : -1.0f});
             light.range = front ? 1200.0f : 160.0f;
             light.innerCos = front ? 0.96f : 0.75f;
             light.outerCos = front ? 0.80f : 0.25f;
@@ -574,4 +582,8 @@ void RenderCarSpotLights(RenderWorld *world) {
             RenderWorldSubmitSpotLight(world, &light);
         }
     }
+}
+
+void RenderCarSpotLights(RenderWorld *world) {
+    RenderCarSpotLightsWithSettings(world, 12.0f, 300.0f);
 }

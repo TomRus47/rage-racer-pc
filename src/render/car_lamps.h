@@ -13,4 +13,6 @@ unsigned CarLamps(const RenderMeshInstance *body, const Lamp **lamps);
 float CarLightDaylight(Vec3 sky, Vec3 horizon);
 float CarLampIntensity(const CarLights *state, LampKind kind);
 void RenderCarSpotLights(RenderWorld *world);
+void RenderCarSpotLightsWithSettings(RenderWorld *world, float pitchDegrees,
+                                     float cockpitRecess);
 #endif

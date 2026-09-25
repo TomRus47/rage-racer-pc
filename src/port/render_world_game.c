@@ -38,7 +38,7 @@ static RenderWorld s_presentationWorld;
 static uint64_t s_presentationSerial;
 enum {
     RAGE_CAR_RENDER_PART_COUNT = 6,
-    RAGE_PLAYER_CAR_ENTITY = RACE_CAR_SLOT_COUNT,
+    RAGE_PLAYER_CAR_ENTITY = RAGE_RENDER_PLAYER_CAR_ENTITY,
     RAGE_CAR_ENTITY_COUNT = RACE_CAR_SLOT_COUNT + 1
 };
 static RenderTransform
@@ -516,6 +516,8 @@ void GameRenderWorldPublishCurrentCamera(void) {
                                  g_Camera.view.z, g_Camera.view.angleX,
                                  g_Camera.view.angleY,
                                  g_Camera.view.angleZ);
+    GameRenderWorldMutable()->camera.inCarView =
+        g_RacePhase == RACE_PHASE_ACTIVE && g_Camera.mode == CAMERA_VIEW_CAR;
     /* A car mirror is a second scene camera, not a recreation of the PS1
      * mirror pass. A 20 degree vertical FOV on the wide mirror target gives
      * a useful rearward field of view without the old projection distortion. */

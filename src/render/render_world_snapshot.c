@@ -5,7 +5,7 @@
 #include <string.h>
 
 enum {
-    RAGE_RENDER_WORLD_SNAPSHOT_VERSION = 10,
+    RAGE_RENDER_WORLD_SNAPSHOT_VERSION = 11,
     RAGE_RENDER_WORLD_SNAPSHOT_MAX_INSTANCES = 1000000,
 };
 
@@ -128,7 +128,7 @@ static int SkyLayoutValid(const RenderCamera *value) {
 }
 
 static int WriteCamera(FILE *file, const RenderCamera *value) {
-    if (!SkyLayoutValid(value)) return 0;
+    if (!SkyLayoutValid(value) || value->inCarView > 1) return 0;
     return WriteTransform(file, &value->transform) &&
            WriteFloat(file, value->verticalFovDegrees) &&
            WriteFloat(file, value->nearPlane) &&
@@ -146,17 +146,19 @@ static int WriteCamera(FILE *file, const RenderCamera *value) {
            WriteFloat(file, value->fogNear) &&
            WriteFloat(file, value->fogFar) &&
            WriteU8(file, value->hasSkyLayout) &&
-           WriteBytes(file, value->skyLayout.tiles, sizeof(value->skyLayout.tiles));
+           WriteBytes(file, value->skyLayout.tiles, sizeof(value->skyLayout.tiles)) &&
+           WriteU8(file, value->inCarView);
 }
 
 static int ReadCamera(FILE *file, RenderCamera *value, uint32_t version) {
+    value->inCarView = 0;
     if (!ReadTransform(file, &value->transform) ||
         !ReadFloat(file, &value->verticalFovDegrees) ||
         !ReadFloat(file, &value->nearPlane) ||
         !ReadFloat(file, &value->farPlane) ||
         !ReadVec3(file, &value->fogColor)) return 0;
     if (version >= 2) {
-        return ReadVec3(file, &value->skyTopColor) &&
+        if (!(ReadVec3(file, &value->skyTopColor) &&
                ReadVec3(file, &value->skyColor) &&
                ReadVec3(file, &value->skyHorizonColor) &&
                ReadVec3(file, &value->skyBottomColor) &&
@@ -171,7 +173,9 @@ static int ReadCamera(FILE *file, RenderCamera *value, uint32_t version) {
                (version < 7 ||
                 (ReadU8(file, &value->hasSkyLayout) &&
                  ReadBytes(file, value->skyLayout.tiles, sizeof(value->skyLayout.tiles)) &&
-                 SkyLayoutValid(value)));
+                 SkyLayoutValid(value))))) return 0;
+        if (version >= 11 && !ReadU8(file, &value->inCarView)) return 0;
+        return value->inCarView <= 1;
     }
     if (!ReadVec3(file, &value->skyColor)) return 0;
     /* Version 1 recorded one flat backdrop colour. Preserve that exact

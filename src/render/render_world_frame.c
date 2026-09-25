@@ -142,6 +142,7 @@ void RenderInterpolateCamera(const RenderCamera *previous,
     out->skyCloudRow = current->skyCloudRow;
     out->skyLayout = current->skyLayout;
     out->hasSkyLayout = current->hasSkyLayout;
+    out->inCarView = current->inCarView;
     if (previous->skyCloudRow != current->skyCloudRow ||
         previous->skyAssetKey != current->skyAssetKey ||
         previous->hasSkyLayout != current->hasSkyLayout ||

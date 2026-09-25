@@ -87,8 +87,8 @@ int main(void) {
     CHECK(world.spotLightCount == 2);
     CHECK(fabsf(world.spotLights[0].position.x - (10 + 91.88095f * 0.25f)) < 0.001f);
     CHECK(fabsf(world.spotLights[0].position.z - (30 + 434.88889f * 0.25f)) < 0.001f);
-    CHECK(world.spotLights[0].direction.z > 0.99f);
-    CHECK(world.spotLights[0].direction.y < 0);
+    CHECK(world.spotLights[0].direction.z > 0.97f);
+    CHECK(world.spotLights[0].direction.y > 0.20f);
     world.spotLightCount = 0;
     body.transform.hasOrientation = 1;
     body.transform.orientation = (Quaternion){0, 1, 0, 0};
@@ -266,7 +266,7 @@ int main(void) {
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 4);
     for (int i = 0; i < 4; ++i) {
-        CHECK(i < 2 ? world.spotLights[i].direction.z > 0.99f
+        CHECK(i < 2 ? world.spotLights[i].direction.z > 0.97f
                     : world.spotLights[i].direction.z < -0.99f);
         CHECK(i < 2 ? world.spotLights[i].position.z > body.transform.position.z
                     : world.spotLights[i].position.z < body.transform.position.z);

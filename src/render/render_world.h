@@ -58,6 +58,8 @@ typedef struct RenderCamera {
      * did not include this state; newly produced game cameras always set it. */
     RageSkyPanoramaLayout skyLayout;
     uint8_t hasSkyLayout;
+    /* Driver camera flag used by first-person-only light placement. */
+    uint8_t inCarView;
     /* The retail cloud layer is screen-space geometry. These three vectors
      * preserve its measured origin and two tile axes for native backends. */
     Vec3 skyGridOrigin;
@@ -66,6 +68,8 @@ typedef struct RenderCamera {
     float fogNear;
     float fogFar;
 } RenderCamera;
+
+enum { RAGE_RENDER_PLAYER_CAR_ENTITY = 11 };
 
 /* One renderer-neutral sun and ambient environment. Both direct shading and
  * shadow cameras consume this value, so a backend cannot silently use a

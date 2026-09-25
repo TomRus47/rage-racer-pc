@@ -981,7 +981,10 @@ void ModernNativeGpuPrepare(const RenderWorld *world, float aspect) {
         return;
     }
     world = &s_ownedWorld.world;
-    RenderCarSpotLights(&s_ownedWorld.world);
+    RenderCarSpotLightsWithSettings(
+        &s_ownedWorld.world,
+        (float)RuntimeConfigInt("lighting.headlight_pitch_degrees", 12, 0, 45),
+        (float)RuntimeConfigInt("lighting.cockpit_headlight_recess", 300, 0, 1000));
     if (trace) copied = SDL_GetTicksNS();
     void *meshLookupContext = ModernNativePrepareMeshLookup(world);
     if (trace) lookupFinished = SDL_GetTicksNS();
@@ -989,7 +992,8 @@ void ModernNativeGpuPrepare(const RenderWorld *world, float aspect) {
     for (instance = 0; instance < world->instanceCount; instance++) {
         const RenderMeshInstance *candidate = &world->instances[instance];
         if (candidate->pass == RAGE_RENDER_PASS_MAIN &&
-            candidate->entity == 11 && candidate->component == 0 &&
+            candidate->entity == RAGE_RENDER_PLAYER_CAR_ENTITY &&
+            candidate->component == 0 &&
             candidate->assetSet == RAGE_RENDER_ASSET_MODEL_BANK) {
             shadowCenter = candidate->transform.position;
             break;
