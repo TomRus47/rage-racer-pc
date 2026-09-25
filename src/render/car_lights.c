@@ -35,9 +35,12 @@ void UpdateCarLights(CarLights *lights, float daylight, float shelter,
         lights->headlights -= step;
         if (lights->headlights < target) lights->headlights = target;
     }
-    lights->tail = 0.06f + lights->headlights * 0.14f;
-    /* STOP responds immediately, including while stationary in daylight.
-     * A shared tail/stop surface takes max(tail, stop); separate segments
-     * use the two values independently. */
-    lights->stop = braking ? 1.0f : 0.0f;
+    /* Keep the red tail lamps visible in daylight; headlights add a little
+     * more intensity at night. */
+    lights->tail = 0.20f + lights->headlights * 0.20f;
+    /* Brake lamps switch on immediately and linger for a tenth of a second
+     * after release. That short bulb-like decay avoids strobing when the rival
+     * speed controller alternates its brake request between adjacent ticks. */
+    lights->stop = Unit(lights->stop);
+    lights->stop = braking ? 1.0f : fmaxf(0.0f, lights->stop - seconds * 10.0f);
 }

@@ -20,14 +20,14 @@ int main(void) {
     UpdateCarLights(&car, day, 1, 0, 1);
     CHECK(car.headlights == 0);
     UpdateCarLights(&car, dusk, 1, 0, 1);
-    CHECK(car.headlights == 1 && car.tail == 0.2f);
+    CHECK(car.headlights == 1 && car.tail == 0.4f);
     UpdateCarLights(&car, day, 1, 0, 1);
-    CHECK(car.headlights == 0 && car.tail == 0.06f);
+    CHECK(car.headlights == 0 && car.tail == 0.2f);
     UpdateCarLights(&car, day, 0.25f, 0, 1);
     CHECK(car.headlights == 1);
     car = (CarLights){0};
     UpdateCarLights(&car, 1, 1, 0, 1);
-    CHECK(car.headlights == 0 && car.tail == 0.06f && car.stop == 0);
+    CHECK(car.headlights == 0 && car.tail == 0.2f && car.stop == 0);
     UpdateCarLights(&car, 1, 1, 1, 0.02f);
     CHECK(car.stop == 1 && car.headlights == 0);
     UpdateCarLights(&car, 1, 0.25f, 0, 0.1f);
@@ -64,7 +64,7 @@ int main(void) {
     for (int shadow = 0; shadow < 10; ++shadow) {
         for (int tick = 0; tick < 20; ++tick)
             UpdateCarLights(&car, 0, 1, 0, 1.0f / 60);
-        CHECK(!car.automatic && car.headlights == 0 && car.tail == 0.06f);
+        CHECK(!car.automatic && car.headlights == 0 && car.tail == 0.2f);
         UpdateCarLights(&car, 1, 1, 0, 1.0f / 60);
         CHECK(car.darkSeconds == 0);
     }
