@@ -22,17 +22,18 @@ int main(void) {
     UpdateCarLights(&car, dusk, 1, 0, 1);
     CHECK(car.headlights == 1 && car.tail == 0.2f);
     UpdateCarLights(&car, day, 1, 0, 1);
-    CHECK(car.headlights == 0 && car.tail == 0);
+    CHECK(car.headlights == 0 && car.tail == 0.06f);
     UpdateCarLights(&car, day, 0.25f, 0, 1);
     CHECK(car.headlights == 1);
     car = (CarLights){0};
     UpdateCarLights(&car, 1, 1, 0, 1);
-    CHECK(car.headlights == 0 && car.tail == 0 && car.stop == 0);
+    CHECK(car.headlights == 0 && car.tail == 0.06f && car.stop == 0);
     UpdateCarLights(&car, 1, 1, 1, 0.02f);
     CHECK(car.stop == 1 && car.headlights == 0);
     UpdateCarLights(&car, 1, 0.25f, 0, 0.1f);
-    CHECK(car.automatic && fabsf(car.headlights - 0.5f) < 0.0001f);
+    CHECK(!car.automatic && car.headlights == 0);
     CHECK(car.tail > 0 && car.stop == 0);
+    UpdateCarLights(&car, 1, 0.25f, 0, 0.6f);
     UpdateCarLights(&car, 1, 0.32f, 0, 1);
     CHECK(car.automatic && car.headlights == 1);
     UpdateCarLights(&car, 1, 1, 0, 1);
@@ -55,9 +56,24 @@ int main(void) {
     for (int i = 0; i < 50; i++) UpdateCarLights(&car, 0, 1, 0, 1.0f/50);
     for (int i = 0; i < 60; i++) UpdateCarLights(&rival, 0, 1, 0, 1.0f/60);
     CHECK(car.headlights == 1 && rival.headlights == 1);
-    CHECK(CarLampIntensity(&(CarLights){0, 0.2f, 1, 0}, LAMP_TAIL) == 0.2f);
-    CHECK(CarLampIntensity(&(CarLights){0, 0.2f, 1, 0}, LAMP_STOP) == 1);
-    CHECK(CarLampIntensity(&(CarLights){0, 0.2f, 1, 0}, LAMP_TAIL_STOP) == 1);
+    CHECK(CarLampIntensity(&(CarLights){0, 0.2f, 1, 0, 0}, LAMP_TAIL) == 0.2f);
+    CHECK(CarLampIntensity(&(CarLights){0, 0.2f, 1, 0, 0}, LAMP_STOP) == 1);
+    CHECK(CarLampIntensity(&(CarLights){0, 0.2f, 1, 0, 0}, LAMP_TAIL_STOP) == 1);
+    /* Repeated short shadows must not accumulate into a tunnel entry. */
+    car = (CarLights){0};
+    for (int shadow = 0; shadow < 10; ++shadow) {
+        for (int tick = 0; tick < 20; ++tick)
+            UpdateCarLights(&car, 0, 1, 0, 1.0f / 60);
+        CHECK(!car.automatic && car.headlights == 0 && car.tail == 0.06f);
+        UpdateCarLights(&car, 1, 1, 0, 1.0f / 60);
+        CHECK(car.darkSeconds == 0);
+    }
+    /* Pausing midway through the delay preserves its elapsed time. */
+    UpdateCarLights(&car, 0, 1, 0, 0.3f);
+    UpdateCarLights(&car, 0, 1, 0, 0);
+    CHECK(car.darkSeconds == 0.3f && !car.automatic);
+    UpdateCarLights(&car, 0, 1, 0, 0.3f);
+    CHECK(car.automatic);
     RenderMeshInstance body = {0};
     body.assetSet = RAGE_RENDER_ASSET_MODEL_BANK;
     body.assetKey = 68;
@@ -100,7 +116,7 @@ int main(void) {
     body.assetSet = RAGE_RENDER_ASSET_TRACK_MODEL_BANK_1;
     body.assetKey = 128;
     body.transform.hasOrientation = 0;
-    body.lamps = (CarLights){0, 0.2f, 0, 1};
+    body.lamps = (CarLights){0, 0.2f, 0, 1, 0};
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 2);
     CHECK(world.spotLights[0].position.x < body.transform.position.x);
@@ -115,7 +131,7 @@ int main(void) {
     CHECK(fabsf(world.spotLights[0].color.x - 5 * tail) < 0.0001f);
     CHECK(world.spotLights[0].color.x == world.spotLights[1].color.x);
     /* Changing body detail must not switch off or move the light sources. */
-    body.lamps = (CarLights){1, 0.2f, 1, 1};
+    body.lamps = (CarLights){1, 0.2f, 1, 1, 0};
     world.spotLightCount = 0;
     RenderCarSpotLights(&world);
     SpotLight nearLights[4];
@@ -131,14 +147,14 @@ int main(void) {
         CHECK(world.spotLights[i].color.x == nearLights[i].color.x);
     }
     body.mesh = 5;
-    body.lamps = (CarLights){1, 0.2f, 0, 1};
+    body.lamps = (CarLights){1, 0.2f, 0, 1, 0};
     world.spotLightCount = 0;
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 4);
     CHECK(world.spotLights[0].position.x < body.transform.position.x);
     CHECK(world.spotLights[1].position.x > body.transform.position.x);
     tail = world.spotLights[2].color.x;
-    body.lamps = (CarLights){0, 0, 1, 0};
+    body.lamps = (CarLights){0, 0, 1, 0, 0};
     world.spotLightCount = 0;
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 2);
@@ -148,14 +164,14 @@ int main(void) {
         body.assetKey = 128 + course * 2;
         body.mesh = mesh;
         unsigned count = mesh == 15 ? 6 : 4;
-        body.lamps = (CarLights){1, 0.2f, 0, 1};
+        body.lamps = (CarLights){1, 0.2f, 0, 1, 0};
         world.spotLightCount = 0;
         RenderCarSpotLights(&world);
         CHECK(world.spotLightCount == count);
         for (unsigned i = 0; i < count; ++i)
             CHECK(i < 2 ? world.spotLights[i].direction.z > 0
                         : world.spotLights[i].direction.z < 0);
-        body.lamps = (CarLights){0, 0, 1, 0};
+        body.lamps = (CarLights){0, 0, 1, 0, 0};
         world.spotLightCount = 0;
         RenderCarSpotLights(&world);
         CHECK(world.spotLightCount == count - 2);
@@ -165,7 +181,7 @@ int main(void) {
         CHECK(world.spotLightCount == 0);
     }
     body.assetKey = 129; /* Track texture assets are not car model banks. */
-    body.lamps = (CarLights){1, 0.2f, 1, 1};
+    body.lamps = (CarLights){1, 0.2f, 1, 1, 0};
     world.spotLightCount = 0;
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 0);
@@ -191,18 +207,18 @@ int main(void) {
         body.mesh = 0;
         for (unsigned i = 0; i < sizeof(banks) / sizeof(*banks); ++i) {
             body.assetKey = banks[i];
-            body.lamps = (CarLights){1, 0.2f, 0, 1};
+            body.lamps = (CarLights){1, 0.2f, 0, 1, 0};
             world.spotLightCount = 0;
             RenderCarSpotLights(&world);
             CHECK(world.spotLightCount == 4);
             CHECK(world.spotLights[0].direction.z > 0);
             CHECK(world.spotLights[2].direction.z < 0);
-            body.lamps = (CarLights){0, 0, 1, 0};
+            body.lamps = (CarLights){0, 0, 1, 0, 0};
             world.spotLightCount = 0;
             RenderCarSpotLights(&world);
             CHECK(world.spotLightCount == 2);
         }
-        body.lamps = (CarLights){1, 0.2f, 1, 1};
+        body.lamps = (CarLights){1, 0.2f, 1, 1, 0};
     }
     for (unsigned bank = 96; bank <= 124; bank += 2)
     for (unsigned mesh = 0; mesh <= 30; mesh += 5) {
@@ -245,7 +261,7 @@ int main(void) {
     body.mesh = 0;
     body.assetSet = RAGE_RENDER_ASSET_MODEL_BANK;
     body.assetKey = 24;
-    body.lamps = (CarLights){1, 0.2f, 0, 1};
+    body.lamps = (CarLights){1, 0.2f, 0, 1, 0};
     world.spotLightCount = 0;
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 4);
@@ -255,7 +271,7 @@ int main(void) {
         CHECK(i < 2 ? world.spotLights[i].position.z > body.transform.position.z
                     : world.spotLights[i].position.z < body.transform.position.z);
     }
-    body.lamps = (CarLights){0, 0, 1, 0};
+    body.lamps = (CarLights){0, 0, 1, 0, 0};
     world.spotLightCount = 0;
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 2); /* Braking during the day lights only the rear. */
@@ -277,11 +293,11 @@ int main(void) {
             CHECK(isfinite(lamps[i].position.x) && isfinite(lamps[i].position.y));
             CHECK(i < 2 ? lamps[i].position.z > 0 : lamps[i].position.z < 0);
         }
-        body.lamps = (CarLights){1, 0.2f, 0, 1};
+        body.lamps = (CarLights){1, 0.2f, 0, 1, 0};
         world.spotLightCount = 0;
         RenderCarSpotLights(&world);
         CHECK(world.spotLightCount == 4);
-        body.lamps = (CarLights){0, 0, 1, 0};
+        body.lamps = (CarLights){0, 0, 1, 0, 0};
         world.spotLightCount = 0;
         RenderCarSpotLights(&world);
         CHECK(world.spotLightCount == 2);
@@ -299,11 +315,11 @@ int main(void) {
     RenderMeshInstance grid[12] = {0};
     for (unsigned key = 38; key <= 44; key += 2) {
         body.assetKey = key;
-        body.lamps = (CarLights){1, 0.2f, 1, 1};
+        body.lamps = (CarLights){1, 0.2f, 1, 1, 0};
         world.spotLightCount = 0;
         RenderCarSpotLights(&world);
         CHECK(world.spotLightCount == 6);
-        body.lamps = (CarLights){0, 0, 1, 0};
+        body.lamps = (CarLights){0, 0, 1, 0, 0};
         world.spotLightCount = 0;
         RenderCarSpotLights(&world);
         CHECK(world.spotLightCount == 4);
@@ -316,7 +332,7 @@ int main(void) {
         grid[i].entity = i;
         grid[i].transform.scale = (Vec3){1, 1, 1};
         grid[i].transform.position.x = i * 1000;
-        grid[i].lamps = (CarLights){1, 0.2f, 1, 1};
+        grid[i].lamps = (CarLights){1, 0.2f, 1, 1, 0};
     }
     RenderCarSpotLights(&world);
     CHECK(world.spotLightCount == 72);

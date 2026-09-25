@@ -580,8 +580,8 @@ static void test_synchronized_presentation_moves_matching_vehicle(void) {
     previousStorage[0].materialVariant = currentStorage[0].materialVariant = 28;
     previousStorage[0].transform.position.z = 100.0f;
     currentStorage[0].transform.position.z = 140.0f;
-    previousStorage[0].lamps = (CarLights){0, 0, 1, 1};
-    currentStorage[0].lamps = (CarLights){1, 0.2f, 0, 1};
+    previousStorage[0].lamps = (CarLights){0, 0, 1, 1, 0};
+    currentStorage[0].lamps = (CarLights){1, 0.2f, 0, 1, 0};
     previous.instanceCount = current.instanceCount = 1;
 
     EXPECT_EQ(1, RenderWorldBuildSynchronizedPresentation(
@@ -901,7 +901,26 @@ static void test_spot_lights_validate_and_reset(void) {
     EXPECT_EQ(1, !!(world.spotLightCount == 0));
 }
 
+static void test_light_volume_culling(void) {
+    RenderCamera camera = {0};
+    camera.verticalFovDegrees = 90;
+    camera.nearPlane = 1;
+    camera.farPlane = 1000;
+    RenderViewTransform view = RenderPrepareView(&camera);
+    EXPECT_EQ(1, RenderSphereInView(&view, 1, (Vec3){0, 0, -100}, 1));
+    EXPECT_EQ(0, RenderSphereInView(&view, 1, (Vec3){0, 0, 100}, 99));
+    EXPECT_EQ(1, RenderSphereInView(&view, 1, (Vec3){0, 0, 100}, 102));
+    EXPECT_EQ(0, RenderSphereInView(&view, 1, (Vec3){0, 0, -1100}, 99));
+    EXPECT_EQ(1, RenderSphereInView(&view, 1, (Vec3){0, 0, -1100}, 100));
+    /* The centre is outside, but the volume still intersects a side plane. */
+    EXPECT_EQ(1, RenderSphereInView(&view, 1, (Vec3){113, 0, -100}, 10));
+    EXPECT_EQ(0, RenderSphereInView(&view, 1, (Vec3){115, 0, -100}, 10));
+    EXPECT_EQ(1, RenderSphereInView(&view, 2, (Vec3){200, 0, -100}, 10));
+    EXPECT_EQ(0, RenderSphereInView(&view, 2, (Vec3){0, 115, -100}, 10));
+}
+
 int main(void) {
+    test_light_volume_culling();
     test_spot_lights_validate_and_reset();
     test_frame_reset_preserves_storage_and_resets_overflow();
     test_mesh_submission_rejects_invalid_storage();

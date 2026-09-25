@@ -10,6 +10,7 @@ vec3 spotLighting(vec3 position, vec3 normal) {
         float rangeSquared = lamp.positionRange.w * lamp.positionRange.w;
         if (distanceSquared >= rangeSquared || distanceSquared < 0.000001)
             continue;
+        if (dot(normal, -offset) <= 0.0) continue;
         vec3 direction = offset * inversesqrt(distanceSquared);
         float cone = dot(direction, lamp.directionOuter.xyz);
         if (cone <= lamp.directionOuter.w) continue;

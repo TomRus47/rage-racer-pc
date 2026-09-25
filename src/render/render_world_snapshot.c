@@ -5,7 +5,7 @@
 #include <string.h>
 
 enum {
-    RAGE_RENDER_WORLD_SNAPSHOT_VERSION = 9,
+    RAGE_RENDER_WORLD_SNAPSHOT_VERSION = 10,
     RAGE_RENDER_WORLD_SNAPSHOT_MAX_INSTANCES = 1000000,
 };
 
@@ -208,7 +208,8 @@ static int WriteInstance(FILE *file,
            WriteFloat(file, value->lamps.headlights) &&
            WriteFloat(file, value->lamps.tail) &&
            WriteFloat(file, value->lamps.stop) &&
-           WriteU8(file, value->lamps.automatic != 0);
+           WriteU8(file, value->lamps.automatic != 0) &&
+           WriteFloat(file, value->lamps.darkSeconds);
 }
 
 static int ReadInstance(FILE *file, RenderMeshInstance *value,
@@ -246,6 +247,7 @@ static int ReadInstance(FILE *file, RenderMeshInstance *value,
             !ReadU8(file, &automatic)) return 0;
         value->lamps.automatic = automatic != 0;
     }
+    if (version >= 10 && !ReadFloat(file, &value->lamps.darkSeconds)) return 0;
     return 1;
 }
 

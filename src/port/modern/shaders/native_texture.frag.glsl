@@ -91,7 +91,7 @@ void main() {
     if (material.emissiveAndShading.w >= 0.0)
         materialLighting = material.emissiveAndShading.w;
     float visibility = 1.0;
-    if (shadowReception > 0.5) {
+    if (shadowReception > 0.5 && materialLighting > 0.0 && fog.a < 1.0) {
         /* Fog replaces the lit colour, so a fragment that is nearly all fog
          * gains nothing from a traced sun ray; the shadow map is enough. */
         if (sceneLight.ray.x > 0.5 && fog.a < 0.9) {
@@ -104,8 +104,16 @@ void main() {
             visibility = shadowVisibility(n);
         }
     }
+    // Estimate edge coverage from the neighbouring fragment quad. Keep this
+    // outside the reception branch so derivatives have all four lanes, and
+    // leave uniform shadow interiors alone. This adds no rays or history.
+    if (sceneLight.ray.x > 0.5) {
+        float edge = clamp(fwidth(visibility), 0.0, 1.0);
+        if (shadowReception > 0.5)
+            visibility = mix(visibility, 0.5, edge * 0.5);
+    }
     float shadow = mix(0.10, 1.0, visibility);
-    float ambientShadow = mix(0.30, 1.0, visibility);
+    float ambientShadow = mix(0.55, 1.0, visibility);
     vec3 light = mix(vec3(1.0),
         environmentLight * (sceneLight.ambient.rgb * ambientShadow +
             sceneLight.diffuse.rgb * diffuse * shadow),
@@ -114,8 +122,10 @@ void main() {
      * terrain.  Apply traced occlusion after that blend as well, otherwise a
      * fully blocked sun ray only changes a small fraction of the final road
      * colour and vehicle shadows appear washed out. */
-    float tracedOcclusion = mix(0.35, 1.0, visibility);
+    float tracedOcclusion = mix(0.60, 1.0, visibility);
     light *= mix(1.0, tracedOcclusion, materialLighting);
+    // Preserve texture contrast, but keep indirect light readable in tunnels.
+    light = max(light, vec3(0.18));
     light = mix(light, vec3(1.0), fog.a);
     vec3 foggedColor = mix(color.rgb, fog.rgb, fog.a);
     vec3 modulation = min(foggedColor * 2.0, vec3(1.0));

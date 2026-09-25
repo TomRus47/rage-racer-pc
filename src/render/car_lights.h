@@ -7,6 +7,7 @@ typedef struct CarLights {
     float tail;
     float stop;
     int automatic;
+    float darkSeconds;
 } CarLights;
 
 /* daylight and shelter are linear luminances in [0, 1]. shelter is the

@@ -8,6 +8,20 @@ static float Radians(float degrees) {
     return degrees * (3.14159265358979323846f / 180.0f);
 }
 
+int RenderSphereInView(const RenderViewTransform *view, float aspect,
+                       Vec3 center, float radius) {
+    float sx, sy;
+    Vec3 point;
+    if (!view || !isfinite(radius) || radius < 0 ||
+        !RenderPerspectiveScales(&view->camera, aspect, &sx, &sy)) return 1;
+    RenderWorldToViewPrepared(view, &center, &point);
+    float depth = -point.z;
+    return depth + radius >= view->camera.nearPlane &&
+        depth - radius <= view->camera.farPlane &&
+        fabsf(point.x) * sx - depth <= radius * sqrtf(sx*sx + 1) &&
+        fabsf(point.y) * sy - depth <= radius * sqrtf(sy*sy + 1);
+}
+
 static void RotateX(Vec3 *v, float radians) {
     float y = v->y * cosf(radians) - v->z * sinf(radians);
     float z = v->y * sinf(radians) + v->z * cosf(radians);

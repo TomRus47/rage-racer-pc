@@ -131,7 +131,7 @@ static void TestRoundTrip(void) {
     instances[0].carPaintColor2 = 18;
     instances[0].textureScrollU = 19;
     instances[0].lightInfluence = 0.4f;
-    instances[0].lamps = (CarLights){1.0f, 0.2f, 1.0f, 1};
+    instances[0].lamps = (CarLights){1.0f, 0.2f, 1.0f, 1, 0.3f};
     instances[0].environmentLight = (Vec3){.1f, .2f, .3f};
     instances[0].depthBias = -2.5f;
     FillTransform(&instances[0].transform, 160);
@@ -167,6 +167,7 @@ static void TestRoundTrip(void) {
     CHECK(loaded.instances[0].lamps.tail == 0.2f);
     CHECK(loaded.instances[0].lamps.stop == 1.0f);
     CHECK(loaded.instances[0].lamps.automatic == 1);
+    CHECK(loaded.instances[0].lamps.darkSeconds == 0.3f);
     CHECK(loaded.instances[0].depthBias == -2.5f);
     CHECK(SameTransform(&loaded.instances[0].transform,
                         &instances[0].transform));
@@ -273,7 +274,7 @@ static void TestSkyLayoutVersionCompatibility(void) {
      * starts after the 56-byte frame/light prefix. hasCamera separates the
      * first pair from the mirror pair. These are wire offsets, not sizeof(C). */
     static const size_t extension[] = {233, 427, 622, 816};
-    CHECK(bytes[8] == 9);
+    CHECK(bytes[8] == 10);
     /* v8 appends a light count; an empty v6 world has no such tail. */
     for (size_t i = 0; i < size - 4; ++i) {
         int skip = 0;

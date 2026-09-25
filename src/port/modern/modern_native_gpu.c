@@ -2010,9 +2010,14 @@ static void ModernNativeGpuDrawSet(
     ModernNativeBuildLight(&s_world->light, renderCamera, &light);
     uint32_t spotCount = s_world->spotLightCount <= RENDER_SPOT_LIGHT_CAPACITY
         ? s_world->spotLightCount : 0;
-    light.spotCount[0] = (float)spotCount;
-    memcpy(light.spots, s_world->spotLights,
-           spotCount * sizeof(*light.spots));
+    RenderViewTransform lightView = RenderPrepareView(renderCamera);
+    uint32_t visibleSpots = 0;
+    for (uint32_t i = 0; i < spotCount; ++i) {
+        const SpotLight *spot = &s_world->spotLights[i];
+        if (RenderSphereInView(&lightView, aspect, spot->position, spot->range))
+            light.spots[visibleSpots++] = *spot;
+    }
+    light.spotCount[0] = (float)visibleSpots;
     SDL_PushGPUFragmentUniformData(command, 0, &light, sizeof(light));
 
     ModernNativeBuildShadowCamera(&s_shadowMap, &shadowCamera);
@@ -2166,7 +2171,10 @@ void ModernNativeGpuDraw(SDL_GPUCommandBuffer *command,
                         (double)ModernRayGpuBuildNanoseconds() / 1000000.0);
             }
         }
-        ModernNativeDrawShadowMap(command);
+        /* Traced sun shadows already cover vehicles. Avoid a second 4096²
+         * depth pass; retain it when tracing is disabled or unavailable. */
+        if ((s_rayMode & 1) == 0 || ModernRayGpuNodeCount() == 0)
+            ModernNativeDrawShadowMap(command);
     }
     ModernNativeGpuDrawSet(command, colorTarget, depthTarget, clearColor,
                            drawSky,

@@ -13,6 +13,8 @@ typedef struct {
 } RenderViewTransform;
 
 RenderViewTransform RenderPrepareView(const RenderCamera *camera);
+int RenderSphereInView(const RenderViewTransform *view, float aspect,
+                       Vec3 center, float radius);
 void RenderWorldToViewPrepared(const RenderViewTransform *transform,
                               const Vec3 *world,
                               Vec3 *view);

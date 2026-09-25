@@ -37,7 +37,7 @@ int main(void) {
     assert(uniform.lamps[0].emission[0] == 0);
     ModernMaterialUniformBuild(&material, 0, &uniform);
     car.component = 0;
-    car.lamps = (CarLights){1, 0.2f, 0, 1};
+    car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
     ModernMaterialUniformLamps(&car, 1, &uniform);
     assert(uniform.lamps[0].emission[0] == 0.5f);
     assert(uniform.lamps[0].emission[3] == 1);
@@ -66,7 +66,7 @@ int main(void) {
     assert(uniform.lamps[0].emission[0] == 2.5f);
     for (int driver = 0; driver < 2; ++driver) {
         car.entity = driver ? 11 : 2;
-        car.lamps = (CarLights){0, 0.2f, 0, 1};
+        car.lamps = (CarLights){0, 0.2f, 0, 1, 0};
         ModernMaterialUniformBuild(&material, 0, &uniform);
         ModernMaterialUniformLamps(&car, 5, &uniform);
         assert(uniform.lamps[0].emission[0] == 0.5f);
@@ -85,7 +85,7 @@ int main(void) {
     assert(uniform.lamps[0].emission[0] == 0);
     for (int driver = 0; driver < 2; ++driver) {
         car.entity = driver ? 11 : 2;
-        car.lamps = (CarLights){1, 0.2f, 0, 1};
+        car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
         ModernMaterialUniformBuild(&material, 0, &uniform);
         ModernMaterialUniformLamps(&car, 18, &uniform);
         assert(uniform.lamps[0].emission[0] == 2.5f);
@@ -103,7 +103,7 @@ int main(void) {
         car.entity = driver ? 11 : 2;
         for (unsigned mesh = 10; mesh <= 15; mesh += 5) {
             car.mesh = mesh;
-            car.lamps = (CarLights){1, 0.2f, 0, 1};
+            car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
             unsigned rearMaterial = mesh == 10 ? 23 : 28;
             unsigned rearPatches = mesh == 10 ? 1 : 4;
             ModernMaterialUniformBuild(&material, 0, &uniform);
@@ -129,7 +129,7 @@ int main(void) {
         car.assetKey = bank;
         for (unsigned model = 0; model < 7; ++model) {
             car.mesh = model * 5;
-            car.lamps = (CarLights){1, 0.2f, 0, 1};
+            car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
             ModernMaterialUniformBuild(&material, 0, &uniform);
             ModernMaterialUniformLamps(&car, front[model], &uniform);
             assert(uniform.lamps[0].emission[0] == 2.5f);
@@ -152,7 +152,7 @@ int main(void) {
         const unsigned rear[] = {1, 6, 11, 15, 18, 23, 27};
         car.assetKey = bank;
         car.mesh = meshes[model];
-        car.lamps = (CarLights){1, 0.2f, 0, 1};
+        car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
         ModernMaterialUniformBuild(&material, 0, &uniform);
         ModernMaterialUniformLamps(&car, front[model], &uniform);
         assert(uniform.lamps[0].emission[0] == 2.5f);
@@ -176,7 +176,7 @@ int main(void) {
         for (unsigned i = 0; i < sizeof(banks) / sizeof(*banks); ++i) {
             car.assetKey = banks[i];
             car.mesh = 0;
-            car.lamps = (CarLights){1, 0.2f, 0, 1};
+            car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
             ModernMaterialUniformBuild(&material, 0, &uniform);
             ModernMaterialUniformLamps(&car, 0, &uniform);
             assert(uniform.lamps[0].emission[0] == 2.5f);
@@ -210,7 +210,7 @@ int main(void) {
         const int shared = bank >= 120 && model == 3;
         car.assetKey = bank;
         car.mesh = model * 5;
-        car.lamps = (CarLights){1, 0.2f, 0, 1};
+        car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
         ModernMaterialUniformBuild(&material, 0, &uniform);
         ModernMaterialUniformLamps(&car, front[model], &uniform);
         assert(uniform.lamps[0].emission[0] == 2.5f);
@@ -227,7 +227,7 @@ int main(void) {
     }
     car.assetKey = 128;
     car.mesh = 4;
-    car.lamps = (CarLights){1, 0.2f, 0, 1};
+    car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
     ModernMaterialUniformBuild(&material, 0, &uniform);
     ModernMaterialUniformLamps(&car, 0, &uniform);
     assert(uniform.lamps[0].emission[0] == 0.5f);
@@ -248,7 +248,7 @@ int main(void) {
     car.assetKey = 10;
     car.mesh = 0;
     car.component = 0;
-    car.lamps = (CarLights){0, 0.2f, 0, 1};
+    car.lamps = (CarLights){0, 0.2f, 0, 1, 0};
     ModernMaterialUniformBuild(&material, 0, &uniform);
     ModernMaterialUniformLamps(&car, 0, &uniform);
     assert(uniform.lamps[0].emission[0] == 0.5f);
@@ -276,7 +276,7 @@ int main(void) {
     assert(uniform.lamps[0].emission[3] == 1);
     assert(uniform.lamps[0].bounds[0] > 14.0f / 256);
     assert(uniform.lamps[1].bounds[2] < 82.0f / 256);
-    car.lamps = (CarLights){0, 0.2f, 0, 1};
+    car.lamps = (CarLights){0, 0.2f, 0, 1, 0};
     ModernMaterialUniformBuild(&material, 0, &uniform);
     ModernMaterialUniformLamps(&car, 0, &uniform);
     assert(uniform.lamps[0].emission[0] == 0.5f);
@@ -290,7 +290,7 @@ int main(void) {
     ModernMaterialUniformLamps(&car, 3, &uniform);
     assert(uniform.lamps[0].emission[0] == 0);
     car.assetKey = 12;
-    car.lamps = (CarLights){1, 0.2f, 0, 1};
+    car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
     ModernMaterialUniformBuild(&material, 0, &uniform);
     ModernMaterialUniformLamps(&car, 3, &uniform);
     assert(uniform.lamps[0].emission[0] == 0); /* Base model's material isn't a lamp. */
@@ -334,7 +334,7 @@ int main(void) {
     car.assetKey = 42;
     car.mesh = 0;
     car.component = 0;
-    car.lamps = (CarLights){1, 0.2f, 0, 1};
+    car.lamps = (CarLights){1, 0.2f, 0, 1, 0};
     ModernMaterialUniformBuild(&material, 0, &uniform);
     ModernMaterialUniformLamps(&car, 1, &uniform);
     assert(uniform.lamps[0].bounds[1] == 225.0f / 256);
@@ -358,7 +358,7 @@ int main(void) {
         rivals[i].assetKey = 120;
         rivals[i].mesh = 15;
     }
-    rivals[1].lamps = (CarLights){1, 0.2f, 1, 1};
+    rivals[1].lamps = (CarLights){1, 0.2f, 1, 1, 0};
     RageNativeDrawSpan span = {0};
     span.assetSet = RAGE_RENDER_ASSET_TRACK_MODEL_BANK_1;
     span.assetKey = 120;
