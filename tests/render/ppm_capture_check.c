@@ -190,6 +190,27 @@ static int Fmv(const unsigned char *pixels, unsigned width, unsigned height) {
         fprintf(stderr, "FMV image invalid: picture=%u green_corruption=%u\n", pictureNonBlack, greenCorruption);
     return pictureNonBlack >= 10000 && greenCorruption <= 2000;
 }
+static int Volume(const unsigned char *pixels, unsigned width, unsigned height) {
+    if (width != 320 || height != 480) return 0;
+    const unsigned boxes[][4] = {
+        {35, 56, 80, 80}, {35, 88, 60, 112}, {35, 120, 64, 144},
+        {70, 208, 250, 240}, {70, 248, 250, 280},
+    };
+    for (unsigned i = 0; i < sizeof(boxes) / sizeof(*boxes); ++i) {
+        unsigned white = 0;
+        for (unsigned y = boxes[i][1]; y < boxes[i][3]; ++y)
+            for (unsigned x = boxes[i][0]; x < boxes[i][2]; ++x) {
+                const unsigned char *p = pixels + ((size_t)y * width + x) * 3;
+                white += p[0] > 180 && p[1] > 180 && p[2] > 180;
+            }
+        if (white < 80) {
+            fprintf(stderr, "volume menu lost label/bar %u: %u white pixels\n", i, white);
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int main(int argc, char **argv) {
     unsigned width = 0, height = 0;
     unsigned char *pixels;
@@ -206,6 +227,7 @@ int main(int argc, char **argv) {
     if (!strcmp(argv[1], "waterfall")) ok = Waterfall(pixels, width, height);
     else if (!strcmp(argv[1], "pegase")) ok = Pegase(pixels, width, height);
     else if (!strcmp(argv[1], "boot")) ok = Boot(pixels, width, height);
+    else if (!strcmp(argv[1], "volume")) ok = Volume(pixels, width, height);
     else if (!strcmp(argv[1], "trophy")) ok = Trophy(pixels, width, height);
     else if (!strcmp(argv[1], "prologue")) ok = Prologue(pixels, width, height);
     else if (!strcmp(argv[1], "grand_prix")) ok = GrandPrix(pixels, width, height);
