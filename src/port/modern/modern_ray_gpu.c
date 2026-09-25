@@ -201,7 +201,15 @@ static const RayMesh *LookupRayMesh(void *opaque,
 int ModernRayGpuInit(SDL_GPUDevice *device) {
     if (device == NULL) return 0;
     s_device = device;
-    return 1;
+    /* The shared fragment shaders declare these bindings even with tracing
+     * disabled. Vulkan still requires valid descriptors for every binding. */
+    const RayGpuSceneLayout empty = {
+        .nodeBytes = sizeof(RayGpuNode),
+        .triangleBytes = sizeof(RayGpuTriangle),
+        .indexBytes = sizeof(uint32_t),
+        .instanceBytes = sizeof(RayGpuInstance),
+    };
+    return EnsureBuffers(&empty);
 }
 
 void ModernRayGpuSubmitted(void) {
@@ -341,7 +349,7 @@ done:
 
 void ModernRayGpuBind(SDL_GPURenderPass *pass) {
     SDL_GPUBuffer *buffers[4];
-    if (pass == NULL || s_nodeCount == 0) return;
+    if (pass == NULL || s_buffers.nodes == NULL) return;
     buffers[0] = s_buffers.nodes;
     buffers[1] = s_buffers.triangles;
     buffers[2] = s_buffers.indices;

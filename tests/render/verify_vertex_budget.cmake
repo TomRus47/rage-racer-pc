@@ -6,6 +6,9 @@ endif()
 set(root "${OUTPUT_ROOT}/vertex-budget")
 file(MAKE_DIRECTORY "${root}")
 foreach(cpu false true)
+    file(REMOVE "${root}/${cpu}.ppm")
+    # RT-off shaders still require storage-buffer descriptors. This run also
+    # regresses the first-scene Vulkan crash caused by leaving them unbound.
     execute_process(COMMAND "${CMAKE_COMMAND}" -E env SDL_AUDIODRIVER=dummy
         "${GAME}" --scenario "${SOURCE}/tests/scenarios/authored_vainqure.ini"
         --set "disc.image=${disc}" --set race.class=4 --set race.car=3 --set race.variant=4
@@ -24,7 +27,8 @@ foreach(cpu false true)
     endif()
     file(READ "${root}/${cpu}.log" log)
     string(REGEX MATCHALL "native-vertex-grow required=[0-9]+ capacity=[0-9]+ maximum=112000000" growth "${log}")
-    if(NOT growth OR NOT log MATCHES "native draws frame=[0-9]+ draws=[1-9][0-9]+")
+    if(NOT growth OR NOT log MATCHES "native draws frame=[0-9]+ draws=[1-9][0-9]+"
+       OR NOT log MATCHES "ray tracing=off")
         message(FATAL_ERROR "No actual buffer growth and rendering observed; see ${root}")
     endif()
     foreach(event IN LISTS growth)

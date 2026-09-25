@@ -760,7 +760,7 @@ int ModernNativeGpuInit(SDL_GPUDevice *device, int linearTextureFilter) {
     s_skySampler = SDL_CreateGPUSampler(s_device, &sampler);
     s_lampGlow = CreateLampGlow();
     if (!s_lampGlow) { ModernNativeGpuShutdown(); return 0; }
-    if (s_rayMode && !ModernRayGpuInit(s_device)) s_rayMode = 0;
+    if (!ModernRayGpuInit(s_device)) { ModernNativeGpuShutdown(); return 0; }
     fprintf(stderr, "rage-port: ray tracing=%s\n",
             s_rayMode == 3 ? "full" : s_rayMode == 2 ? "reflections" :
             s_rayMode == 1 ? "shadows" : "off");
