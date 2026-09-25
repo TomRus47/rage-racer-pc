@@ -179,7 +179,8 @@ void DrawPlayerCarModel(GameCarRuntime *object) {
         (int64_t)object->renderDepth * 2);
     s32 clipHandle;
 
-    GameRenderWorldSubmitPlayerCar(object, g_RenderState.pass.orderingFlag != 0);
+    GameRenderWorldSubmitPlayerCar(
+        object, g_RenderState.pass.orderingFlag != 0, 0);
 
     if (object->wheelRotation & CAR_WHEEL_BLUR_FLAG) {
         modelBankBase = WrapSigned32((int64_t)modelBankBase + 10);

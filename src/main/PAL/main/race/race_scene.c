@@ -443,7 +443,7 @@ static void UpdateActiveRaceScene(RaceScene *state) {
         } else {
             UpdateCamera(&g_Camera, raceView.cameraView, player);
             if (raceView.cameraView == CAMERA_VIEW_CAR) {
-                GameRenderWorldSubmitPlayerCarLamps(player);
+                GameRenderWorldSubmitPlayerCar(player, 0, 1);
             }
         }
     }

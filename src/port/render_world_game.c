@@ -244,10 +244,6 @@ static Vec3 SceneRotatePoint(RageSceneMat3 matrix,
     return out;
 }
 
-/* Set while the in-car view publishes the player's body for its lamps only:
- * neither the rasterizer nor the ray scene ever sees it. */
-static int s_playerCarLampsOnly;
-
 static void GameRenderWorldSubmitCarPart(uint32_t entity, uint32_t part,
                                              uint32_t asset,
                                              RenderAssetSet assetSet,
@@ -256,6 +252,7 @@ static void GameRenderWorldSubmitCarPart(uint32_t entity, uint32_t part,
                                              Vec3 psPosition,
                                              RageSceneMat3 rotation,
                                              Vec3 environmentLight,
+                                             int lampsOnly,
                                              int mirror_pass) {
     RenderMeshInstance instance;
     if (part >= RAGE_CAR_RENDER_PART_COUNT) return;
@@ -286,7 +283,7 @@ static void GameRenderWorldSubmitCarPart(uint32_t entity, uint32_t part,
     /* Cars are depth-cued like every other polygon on the PS1. */
     instance.flags = RAGE_RENDER_INSTANCE_ENABLE_LIGHTING |
                      RAGE_RENDER_INSTANCE_ENABLE_FOG;
-    if (s_playerCarLampsOnly)
+    if (lampsOnly)
         instance.flags |= RAGE_RENDER_INSTANCE_LAMPS_ONLY;
     instance.environmentLight = environmentLight;
     instance.transform.position.x = psPosition.x;
@@ -792,6 +789,7 @@ static void GameRenderWorldSubmitCarAssembly(const GameCarRuntime *object,
                                                  s16 offsetY, s16 offsetZ,
                                                  s32 steeringAngle,
                                                  Vec3 environmentLight,
+                                                 int lampsOnly,
                                                  int mirror_pass) {
     RageSceneMat3 base, body, wheelBase, frontLeft, frontRight;
     Vec3 origin, front;
@@ -815,6 +813,7 @@ static void GameRenderWorldSubmitCarAssembly(const GameCarRuntime *object,
     GameRenderWorldSubmitCarPart(entity, 0, asset, assetSet, bodyMesh,
                                      bodyPaletteOffset,
                                      origin, body, environmentLight,
+                                     lampsOnly,
                                      mirror_pass);
     /* bodyMesh + 1 is the old flat PS1 shadow plate. Dynamic shadows are
      * generated from the actual body and wheel geometry, so the compatibility
@@ -823,7 +822,7 @@ static void GameRenderWorldSubmitCarAssembly(const GameCarRuntime *object,
         0,
         origin,
         SceneMat3Multiply(wheelBase, SceneRotationX(object->wheelRotation)),
-        environmentLight, mirror_pass);
+        environmentLight, lampsOnly, mirror_pass);
     /* Place each front wheel in the road-aligned suspension plane as well as
      * rotating it there. Using `base` left both wheel centres at the same
      * height on banked road while the body rolled between them, making one
@@ -836,6 +835,7 @@ static void GameRenderWorldSubmitCarAssembly(const GameCarRuntime *object,
     GameRenderWorldSubmitCarPart(entity, 3, asset, assetSet, frontWheelMesh,
                                      0,
                                      front, frontLeft, environmentLight,
+                                     lampsOnly,
                                      mirror_pass);
     front = SceneRotatePoint(wheelBase, -(float)offsetX, (float)offsetY,
                                  (float)offsetZ);
@@ -845,6 +845,7 @@ static void GameRenderWorldSubmitCarAssembly(const GameCarRuntime *object,
     GameRenderWorldSubmitCarPart(entity, 4, asset, assetSet, frontWheelMesh,
                                      0,
                                      front, frontRight, environmentLight,
+                                     lampsOnly,
                                      mirror_pass);
 }
 
@@ -896,7 +897,7 @@ void GameRenderWorldSubmitCar(const GameCarRuntime *object,
             entity, 0, TrackDataAssetKey(),
             RAGE_RENDER_ASSET_TRACK_MODEL_BANK_1,
             (uint32_t)lod[0] + 4u, (uint8_t)lod[1], origin, body,
-            environmentLight, mirror_pass);
+            environmentLight, 0, mirror_pass);
         return;
     }
     GameRenderWorldSubmitCarAssembly(object, entity, TrackDataAssetKey(),
@@ -907,17 +908,11 @@ void GameRenderWorldSubmitCar(const GameCarRuntime *object,
         g_TrackRenderTable->models[car].axis0,
         (s16)g_TrackRenderTable->models[car].axis1,
         (s16)g_TrackRenderTable->models[car].axis2,
-        object->steeringAngle * 2, environmentLight, mirror_pass);
-}
-
-void GameRenderWorldSubmitPlayerCarLamps(const GameCarRuntime *object) {
-    s_playerCarLampsOnly = 1;
-    GameRenderWorldSubmitPlayerCar(object, 0);
-    s_playerCarLampsOnly = 0;
+        object->steeringAngle * 2, environmentLight, 0, mirror_pass);
 }
 
 void GameRenderWorldSubmitPlayerCar(const GameCarRuntime *object,
-                                        int mirror_pass) {
+                                    int mirror_pass, int lampsOnly) {
     uint32_t asset;
     uint32_t wheelBase;
     Vec3 environmentLight;
@@ -951,7 +946,7 @@ void GameRenderWorldSubmitPlayerCar(const GameCarRuntime *object,
         0,
         g_CarModelAsset->horizon, g_CarModelAsset->modelOffsetX,
         g_CarModelAsset->modelOffsetY, g_CarModelAsset->modelOffsetZ,
-        object->steeringAngle / 12, environmentLight, mirror_pass);
+        object->steeringAngle / 12, environmentLight, lampsOnly, mirror_pass);
 }
 
 void GameRenderWorldPublishRaceCars(void) {
