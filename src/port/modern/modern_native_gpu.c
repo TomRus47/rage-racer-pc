@@ -138,6 +138,7 @@ static SDL_GPUGraphicsPipeline *s_shadowMasked;
 static SDL_GPUBuffer *s_vertexBuffer;
 static SDL_GPUTransferBuffer *s_vertexTransfer;
 static uint32_t s_vertexTransferBytes;
+static uint32_t s_vertexBufferBytes;
 static SDL_GPUSampler *s_sampler;
 static SDL_GPUTexture *s_shadowTexture;
 static SDL_GPUSampler *s_shadowSampler;
@@ -717,9 +718,9 @@ int ModernNativeGpuInit(SDL_GPUDevice *device, int linearTextureFilter) {
      * a full scene budget for each: making the mirror use only whatever the
      * main camera happened to leave made its contents depend on main-view
      * visibility and instance order. */
-    buffer.size =
-        MODERN_NATIVE_MAX_BUFFER_VERTICES * sizeof(RageNativeGpuVertex);
+    buffer.size = 65536;
     s_vertexBuffer = SDL_CreateGPUBuffer(s_device, &buffer);
+    s_vertexBufferBytes = s_vertexBuffer ? buffer.size : 0;
     transfer.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     transfer.size = 65536;
     s_vertexTransfer = SDL_CreateGPUTransferBuffer(s_device, &transfer);
@@ -1627,6 +1628,29 @@ static void *ModernNativeMapVertexUpload(uint32_t bytes) {
     return SDL_MapGPUTransferBuffer(s_device, s_vertexTransfer, true);
 }
 
+/* Most geometry uses resident model buffers. The shared fallback must not
+ * allocate its two-million-vertex ceiling (112 MB) for every cycled copy. */
+static int ModernNativeReserveVertices(uint32_t bytes) {
+    const uint32_t maximum = MODERN_NATIVE_MAX_BUFFER_VERTICES * sizeof(*s_vertices);
+    if (bytes > maximum) return 0;
+    if (bytes <= s_vertexBufferBytes) return 1;
+    uint32_t capacity = s_vertexBufferBytes ? s_vertexBufferBytes : 65536;
+    while (capacity < bytes)
+        capacity = capacity > maximum / 2 ? maximum : capacity * 2;
+    SDL_GPUBufferCreateInfo info = {
+        .usage = SDL_GPU_BUFFERUSAGE_VERTEX, .size = capacity};
+    SDL_GPUBuffer *replacement = SDL_CreateGPUBuffer(s_device, &info);
+    if (!replacement) return 0;
+    if (s_vertexBuffer) SDL_ReleaseGPUBuffer(s_device, s_vertexBuffer);
+    s_vertexBuffer = replacement;
+    s_vertexBufferBytes = capacity;
+    s_worldGpuValid = 0;
+    if (RuntimeConfigEnabled("diagnostics.performance_trace"))
+        fprintf(stderr, "native-vertex-grow required=%u capacity=%u maximum=%u\n",
+                bytes, capacity, maximum);
+    return 1;
+}
+
 static int ModernNativeUploadVertices(SDL_GPUCommandBuffer *command) {
     static int trace = -1;
     if (trace < 0) trace = RuntimeConfigEnabled("diagnostics.performance_trace");
@@ -1683,6 +1707,9 @@ static int ModernNativeUploadVertices(SDL_GPUCommandBuffer *command) {
     }
     if (terrainCount && s_worldIndexBuffer &&
         RenderGeometryPackAppendRanges(&s_worldGeometry, s_worldRanges, rangeCount, s_worldVertexLimit)) {
+        if (!ModernNativeReserveVertices(s_worldGeometry.vertexCount * sizeof(*s_vertices)))
+            return 0;
+        destination.buffer = s_vertexBuffer;
         int reset = !s_worldGpuValid || s_worldUploadedGeneration != s_worldGeometry.generation;
         uint32_t first = reset ? 0 : s_worldUploadedResident;
         uint32_t changed = s_worldGeometry.vertexCount - first;
@@ -1716,7 +1743,10 @@ static int ModernNativeUploadVertices(SDL_GPUCommandBuffer *command) {
             ModernGeometryBinding *bindings = view ? s_mirrorGeometry : s_mainGeometry;
             uint32_t count = view ? s_mirrorSpanCount : s_spanCount;
             for (uint32_t i = 0; i < count; ++i)
-                if (bindings[i].buffer == s_vertexBuffer) bindings[i].indices = s_worldIndexBuffer;
+                if (!bindings[i].local) {
+                    bindings[i].buffer = s_vertexBuffer;
+                    bindings[i].indices = s_worldIndexBuffer;
+                }
         }
         if (trace) {
             fprintf(stderr, "native-world-upload frame=%llu vertices=%u indices=%u resident=%u new_vertices=%u reset=%d bytes=%u\n",
@@ -1730,6 +1760,14 @@ static int ModernNativeUploadVertices(SDL_GPUCommandBuffer *command) {
     }
     destination.size = dynamicCount * sizeof(*s_vertices);
     if (!destination.size) return 1;
+    if (!ModernNativeReserveVertices(destination.size)) return 0;
+    destination.buffer = s_vertexBuffer;
+    for (unsigned view = 0; view < 2; ++view) {
+        ModernGeometryBinding *bindings = view ? s_mirrorGeometry : s_mainGeometry;
+        uint32_t count = view ? s_mirrorSpanCount : s_spanCount;
+        for (uint32_t i = 0; i < count; ++i)
+            if (!bindings[i].local) bindings[i].buffer = s_vertexBuffer;
+    }
     mapped = ModernNativeMapVertexUpload(destination.size);
     if (!mapped) return 0;
     source.transfer_buffer = s_vertexTransfer;
@@ -2250,6 +2288,7 @@ void ModernNativeGpuShutdown(void) {
     s_vertexBuffer = NULL;
     s_vertexTransfer = NULL;
     s_vertexTransferBytes = 0;
+    s_vertexBufferBytes = 0;
     s_sampler = NULL;
     s_skySampler = NULL;
     s_shadowTexture = NULL;

@@ -2017,3 +2017,12 @@ if(TARGET rage-racer)
             SKIP_REGULAR_EXPRESSION "SKIP:")
     endforeach()
 endif()
+
+if(TARGET rage-racer-smoke)
+    add_test(NAME native_vertex_budget COMMAND ${CMAKE_COMMAND}
+        -DGAME=$<TARGET_FILE:rage-racer-smoke> -DSOURCE=${CMAKE_SOURCE_DIR}
+        -DOUTPUT_ROOT=${CMAKE_BINARY_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/verify_vertex_budget.cmake)
+    set_tests_properties(native_vertex_budget PROPERTIES LABELS e2e TIMEOUT 270
+        SKIP_REGULAR_EXPRESSION "SKIP:")
+endif()

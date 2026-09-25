@@ -1417,6 +1417,8 @@ static int ModernRender(const RageSceneSnapshot *snapshot) {
     if (!submitted) {
         fprintf(stderr, "rage-port: modern submit failed frame=%u; rebuilding presentation resources\n",
                 snapshot->frameCounter);
+        fprintf(stderr, "rage-port: GPU submission error: %s\n",
+                inject ? "injected failure" : SDL_GetError());
         ModernDestroyResources();
         return 0;
     }
