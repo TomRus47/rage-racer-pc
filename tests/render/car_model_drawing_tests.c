@@ -146,9 +146,10 @@ void GameRenderWorldSubmitCar(const GameCarRuntime *object, int mirror,
     s_modernSteeringAngle = object->steeringAngle;
 }
 void GameRenderWorldSubmitPlayerCar(const GameCarRuntime *object,
-                                    int mirror) {
+                                    int mirror, int lamps_only) {
     (void)object;
     (void)mirror;
+    (void)lamps_only;
     s_modernPlayerCalls++;
 }
 TrackZoneEffect GetTrackZoneEffect(s32 position) {

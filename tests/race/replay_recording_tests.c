@@ -220,8 +220,9 @@ static void TestRecordedBrakeLights(s16 grandPrix, int rivalCount) {
     for (int frame = 0; frame < 4; ++frame) {
         ApplyReplayFrame(frame, &replayPlayer, grandPrix ? replayRivals : NULL);
         UpdateCarLights(&playerLights, 1, 1, replayPlayer.brakeInput > 0, 1.0f / 60);
-        assert(playerLights.stop == (frame < 2 ? 1.0f : 0.0f));
-        assert(playerLights.headlights == 0 && playerLights.tail == 0.06f);
+        /* Released brake lamps fade out over a tenth of a second. */
+        assert(frame < 2 ? playerLights.stop == 1.0f : playerLights.stop < 1.0f);
+        assert(playerLights.headlights == 0 && playerLights.tail == 0.2f);
         if (!grandPrix) continue;
         for (int car = 0; car < REPLAY_RIVAL_COUNT; ++car) {
             UpdateCarLights(&rivalLights[car], 0, 1,

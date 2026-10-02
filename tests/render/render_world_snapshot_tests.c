@@ -270,16 +270,16 @@ static void TestSkyLayoutVersionCompatibility(void) {
     CHECK(fclose(file) == 0);
     CHECK(size > 833 && size < sizeof(bytes));
     if (size <= 833 || size == sizeof(bytes)) { remove(path); return; }
-    /* v6 camera is 177 bytes; v7 adds flag + 16 tiles. The first camera
+    /* v6 camera is 177 bytes; v7 adds flag + 16 tiles; v11 adds the in-car flag. The first camera
      * starts after the 56-byte frame/light prefix. hasCamera separates the
      * first pair from the mirror pair. These are wire offsets, not sizeof(C). */
-    static const size_t extension[] = {233, 427, 622, 816};
-    CHECK(bytes[8] == 10);
+    static const size_t extension[] = {233, 428, 624, 819};
+    CHECK(bytes[8] == 11);
     /* v8 appends a light count; an empty v6 world has no such tail. */
     for (size_t i = 0; i < size - 4; ++i) {
         int skip = 0;
         for (size_t j = 0; j < 4; ++j)
-            if (i >= extension[j] && i < extension[j] + 17) skip = 1;
+            if (i >= extension[j] && i < extension[j] + 18) skip = 1;
         if (!skip) legacy[used++] = bytes[i];
     }
     legacy[8] = 6;

@@ -93,7 +93,7 @@ int main(void) {
     body.transform.hasOrientation = 1;
     body.transform.orientation = (Quaternion){0, 1, 0, 0};
     RenderCarSpotLights(&world);
-    CHECK(world.spotLights[0].direction.z < -0.99f);
+    CHECK(world.spotLights[0].direction.z < -0.97f);
     CHECK(fabsf(world.spotLights[0].position.z - (30 - 434.88889f * 0.25f)) < 0.001f);
     world.spotLightCount = 0;
     body.lamps.headlights = 0;

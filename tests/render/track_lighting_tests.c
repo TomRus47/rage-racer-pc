@@ -44,10 +44,10 @@ int main(void) {
         EXPECT_NEAR(0, lamps.headlights);
         UpdateCarLights(&lamps, 1, TrackZoneDaylight(256), 0, 1);
         EXPECT_NEAR(1, lamps.headlights);
-        EXPECT_NEAR(0.2f, lamps.tail);
+        EXPECT_NEAR(0.4f, lamps.tail);
         UpdateCarLights(&lamps, 1, TrackZoneDaylight(0), 0, 1);
         EXPECT_NEAR(0, lamps.headlights);
-        EXPECT_NEAR(0.06f, lamps.tail);
+        EXPECT_NEAR(0.2f, lamps.tail);
         UpdateCarLights(&lamps, 1, TrackZoneDaylight(0), 1, 1);
         EXPECT_NEAR(0, lamps.headlights);
         EXPECT_NEAR(1, lamps.stop);
