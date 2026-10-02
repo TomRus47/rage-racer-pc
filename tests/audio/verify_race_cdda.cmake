@@ -34,7 +34,7 @@ if(NOT prologue_log MATCHES "stopped at frame 1200, scene 32" OR
    NOT prologue_log MATCHES "cdda_frames=([1-9][0-9]*) cdda_energy=([1-9][0-9]*) cdda_mix_energy=([1-9][0-9]*)")
     message(FATAL_ERROR "Grand Prix prologue CD-DA produced no mixed sound")
 endif()
-string(REGEX MATCHALL "opened (track .*\\(Track [0-9]+\\)\\.bin|virtual track [0-9]+)" track_entries "${race_log}")
+string(REGEX MATCHALL "opened (track [^\n]*\\(Track [0-9]+\\)\\.bin|virtual track [0-9]+)" track_entries "${race_log}")
 list(LENGTH track_entries track_count)
 if(track_count LESS 2)
     message(FATAL_ERROR "Race did not report enough disc-track transitions")
