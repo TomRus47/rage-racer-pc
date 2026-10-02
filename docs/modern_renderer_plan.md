@@ -239,7 +239,7 @@ Why this shape:
 2. **Instant runtime toggle and A/B comparison.** Both images exist every
    frame; a hotkey can flip between them, and a debug view can show both.
 3. **The oracle stays alive.** Visual comparison tooling
-   (`rage_visual_compare.rb`, GP0 traces, VRAM dumps) keeps working unchanged.
+   (GP0 traces, VRAM dumps, `rage-gp0-replay`) keeps working unchanged.
 4. **It is cheap.** The compat path is a PS1-era workload (tens of thousands
    of packets/frame); running it always costs little on a modern CPU.
 
@@ -509,7 +509,7 @@ lighting per captured matrices; per-pixel fog; sky layer; 2D overlay from the
 captured command list; compositor. Renders at logic rate, internal res =
 window res, 4:3. *Verify:* state parity; A/B toggle shows the same scene
 (geometry within a pixel-scale tolerance at 320×240 internal res against the
-compat frame — reuse `rage_visual_compare.rb` with a tolerance preset); no
+compat frame, with a pixel tolerance); no
 subdivision, no seam lines.
 
 **R3 — parity tail (medium, iterative).**

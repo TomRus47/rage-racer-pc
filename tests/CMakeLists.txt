@@ -26,11 +26,6 @@ endif()
 # seconds inside the script against 210 here, so a parallel run failed it while
 # ctest was still waiting patiently.
 
-# Visual-comparison helpers remain optional developer tools. Do not register
-# them as failing tests on hosts that intentionally do not install the optional
-# Ruby tooling used by visual-comparison helpers.
-find_program(RAGE_RUBY_EXECUTABLE ruby)
-
 if(TARGET rage-racer-smoke)
     foreach(region PAL NTSC-U NTSC-J)
         string(REPLACE "-" "_" key "${region}")
