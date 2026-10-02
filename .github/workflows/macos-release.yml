@@ -33,12 +33,15 @@ jobs:
           ctest --test-dir build/release --output-on-failure
           -L '^(unit|functional)$' --parallel 4
       - name: Stage bundle resources
+        env:
+          VERSION: ${{ inputs.version || github.ref_name }}
         run: |
           resources="build/release/Rage Racer.app/Contents/Resources"
           mkdir -p "$resources" dist
           cp README.md LICENSE.md rage-port.ini race-scenario.ini cars.toml cars.ntscj.toml "$resources/"
           mkdir -p "$resources/docs"
-          cp docs/*.md "$resources/docs/"
+          while read -r doc; do cp "docs/${doc}" "$resources/docs/"; done < packaging/release-docs.txt
+          if [ -f "docs/release-${VERSION}.md" ]; then cp "docs/release-${VERSION}.md" "$resources/docs/"; fi
       - name: Sign and notarize
         env:
           CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
@@ -102,7 +105,8 @@ jobs:
           cp README.md LICENSE.md rage-port.ini race-scenario.ini cars.toml cars.ntscj.toml \
             "dist/${package}/"
           mkdir -p "dist/${package}/docs"
-          cp docs/*.md "dist/${package}/docs/"
+          while read -r doc; do cp "docs/${doc}" "dist/${package}/docs/"; done < packaging/release-docs.txt
+          if [ -f "docs/release-${VERSION}.md" ]; then cp "docs/release-${VERSION}.md" "dist/${package}/docs/"; fi
           ditto -c -k --sequesterRsrc --keepParent \
             "dist/${package}" "dist/${package}.zip"
           unzip -l "dist/${package}.zip" | grep -q "${package}/rage-port.ini$"

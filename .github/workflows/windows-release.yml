@@ -43,7 +43,8 @@ jobs:
           Copy-Item build/release/Release/rage-racer.exe "$root/Rage-Racer.exe"
           Copy-Item README.md, LICENSE.md, rage-port.ini, race-scenario.ini, cars.toml, cars.ntscj.toml $root
           New-Item -ItemType Directory -Force "$root/docs" | Out-Null
-          Copy-Item docs/*.md "$root/docs/"
+          Get-Content packaging/release-docs.txt | ForEach-Object { Copy-Item "docs/$_" "$root/docs/" }
+          if (Test-Path "docs/release-$env:VERSION.md") { Copy-Item "docs/release-$env:VERSION.md" "$root/docs/" }
           Compress-Archive -Path $root -DestinationPath "dist/$package.zip" -Force
           if (!(Test-Path "$root/Rage-Racer.exe") -or
               !(Test-Path "$root/rage-port.ini")) {

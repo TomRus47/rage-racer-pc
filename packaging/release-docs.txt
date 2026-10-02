@@ -1,0 +1,3 @@
+classic-renderer.md
+car-catalog-format.md
+mod-manifest.md

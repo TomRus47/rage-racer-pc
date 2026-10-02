@@ -52,6 +52,32 @@ static int RequireText(const char *name, const char *bytes,
 }
 
 
+/* Every player document packaging/release-docs.txt names, one per line. */
+static int RequireReleaseDocs(const char *root) {
+    char *list;
+    char *line;
+    int ok = 1, count = 0;
+    if (!ReadFile(root, "packaging/release-docs.txt", &list)) {
+        fprintf(stderr, "missing release source file: packaging/release-docs.txt\n");
+        return 0;
+    }
+    for (line = strtok(list, "\r\n"); line != NULL; line = strtok(NULL, "\r\n")) {
+        char relative[512];
+        if (snprintf(relative, sizeof(relative), "docs/%s", line) >= (int)sizeof(relative)) {
+            ok = 0;
+            continue;
+        }
+        ok &= RequireFile(root, relative);
+        count++;
+    }
+    free(list);
+    if (count == 0) {
+        fprintf(stderr, "packaging/release-docs.txt lists no documents\n");
+        ok = 0;
+    }
+    return ok;
+}
+
 /* The release version as CMakeLists.txt declares it. */
 static int ReadReleaseVersion(const char *cmake, char *out, size_t size) {
     const char *key = "RAGE_RACER_RELEASE_VERSION \"";
@@ -110,6 +136,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     printf("release version %s\n", version);
+    ok &= RequireReleaseDocs(argv[1]);
     ok &= RequireText("CMakeLists.txt", cmake, "RageRacer.icns");
     ok &= RequireText("CMakeLists.txt", cmake, "rage-racer.rc");
     free(cmake);
@@ -131,8 +158,14 @@ int main(int argc, char **argv) {
         ok &= RequireText(workflows[index], workflow, "LICENSE.md");
         ok &= RequireText(workflows[index], workflow, "rage-port.ini");
         ok &= RequireText(workflows[index], workflow, "race-scenario.ini");
-        ok &= RequireText(workflows[index], workflow, "docs/*.md");
+        ok &= RequireText(workflows[index], workflow, "packaging/release-docs.txt");
         ok &= RequireText(workflows[index], workflow, "*.zip");
+        if (strstr(workflow, "docs/*.md") != NULL) {
+            fprintf(stderr, "%s ships every developer document; list player "
+                            "documents in packaging/release-docs.txt\n",
+                    workflows[index]);
+            ok = 0;
+        }
         if (strstr(workflow, "tools/rage-launcher.py") != NULL ||
             strstr(workflow, "tools/assetbrowser") != NULL ||
             strstr(workflow, "run: python") != NULL ||

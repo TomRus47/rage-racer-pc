@@ -47,7 +47,8 @@ jobs:
           cp build/release/rage-racer "dist/${package}/rage-racer"
           cp README.md LICENSE.md rage-port.ini race-scenario.ini cars.toml cars.ntscj.toml "dist/${package}/"
           mkdir -p "dist/${package}/docs"
-          cp docs/*.md "dist/${package}/docs/"
+          while read -r doc; do cp "docs/${doc}" "dist/${package}/docs/"; done < packaging/release-docs.txt
+          if [ -f "docs/release-${VERSION}.md" ]; then cp "docs/release-${VERSION}.md" "dist/${package}/docs/"; fi
           cp packaging/icon/rage-racer.png "dist/${package}/"
           (cd dist && zip -qr "${package}.zip" "${package}")
           test -x "dist/${package}/rage-racer"
