@@ -91,6 +91,7 @@ void DrawOTag(OT_TYPE *ot) {
 }
 void PortSampleAnalogPad(void) {}
 void UpdatePadState(void) { s_padUpdates++; }
+void PortUpdateForceFeedback(void) {}
 int PortShouldExit(int frameNumber) {
     return frameNumber == INT_MIN;
 }
