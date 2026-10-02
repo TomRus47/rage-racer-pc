@@ -423,10 +423,9 @@ int HostInitDisc(void) {
         const char *testPath = configuredPath;
         if (testPath == NULL || testPath[0] == '\0')
             testPath = "disc/PAL/Rage Racer (Europe)/Rage Racer (Europe).cue";
-        if (access(testPath, R_OK) == 0 &&
-            HostOpenDisc(testPath)) {
-            return 1;
-        }
+        if (access(testPath, R_OK) != 0 || !HostOpenDisc(testPath))
+            fprintf(stderr, "rage-port: no test disc at %s; scenes that need "
+                            "disc data will stay black\n", testPath);
         return 1;
     }
     if (configuredPath != NULL && configuredPath[0] != '\0') {
