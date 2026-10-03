@@ -6,6 +6,7 @@
 #include "modern_overlay_state.h"
 #include "modern_overlay_batches.h"
 #include "modern_presentation_clock.h"
+#include "modern_fmv_zoom.h"
 #include "../classic_motion.h"
 #include "rage/render_world_game.h"
 #include "rage/track_asset_identity.h"
@@ -325,6 +326,7 @@ static void ModernDestroyResources(void) {
         if ((value) != NULL) SDL_ReleaseGPU##kind(s_device, (value));          \
         (value) = NULL;                                                        \
     } while (0)
+        ModernFmvZoomRelease(s_device);
         RAGE_RELEASE(Texture, s_target);
         RAGE_RELEASE(Texture, s_depth);
         RAGE_RELEASE(Texture, s_mirrorTarget);
@@ -1710,6 +1712,7 @@ static void ModernPresentSource(PsyzPresentSourceInfo *info) {
         if (s_config.modernTextureFilterLinear) {
             info->filter = SDL_GPU_FILTER_LINEAR;
         }
+        ModernFmvZoomPresent(s_device, s_window, info);
         return;
     }
     if (snapshot->displayHeight != 0 && snapshot->displayHeight != 240) {

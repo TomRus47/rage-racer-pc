@@ -755,3 +755,11 @@ target_include_directories(native_visibility_tests PRIVATE ${CMAKE_SOURCE_DIR}/s
 target_compile_options(native_visibility_tests PRIVATE ${RAGE_STRICT_WARNING_OPTIONS})
 add_test(NAME native_visibility COMMAND native_visibility_tests)
 set_tests_properties(native_visibility PROPERTIES LABELS unit)
+
+add_executable(fmv_zoom_tests fmv_zoom_tests.c ${CMAKE_SOURCE_DIR}/src/port/fmv_zoom.c)
+target_include_directories(fmv_zoom_tests PRIVATE ${CMAKE_SOURCE_DIR}/src/port)
+if(NOT MSVC)
+    target_compile_options(fmv_zoom_tests PRIVATE ${RAGE_STRICT_WARNING_OPTIONS})
+endif()
+add_test(NAME fmv_zoom COMMAND fmv_zoom_tests)
+set_tests_properties(fmv_zoom PROPERTIES LABELS unit)

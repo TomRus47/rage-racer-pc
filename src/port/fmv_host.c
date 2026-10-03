@@ -11,6 +11,7 @@
 #include "host_disc.h"
 #include "fmv_str.h"
 #include "fmv_stream_index.h"
+#include "fmv_zoom.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -196,6 +197,13 @@ static int HostDecodeFmvFrame(void) {
         g_Fmv.streamEnded = 1;
         HostFmvAudioAllowTail();
     }
+    return 1;
+}
+
+int HostFmvFrameSize(int *width, int *height) {
+    if (s_pixels == NULL) return 0;
+    *width = s_width;
+    *height = s_height;
     return 1;
 }
 

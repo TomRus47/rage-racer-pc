@@ -200,6 +200,7 @@ Video settings:
 | `texture_filter` | `nearest`, `linear` |
 | `post` | `none`, `fxaa` |
 | `grading` | `off`, `vibrant` |
+| `fmv_zoom` | `false` (whole 4:3 movie), `true` (crop the movie to fill the window) |
 | `toggle_renderer_key` | an SDL key name, such as `F10` |
 
 Display, content and storage settings:

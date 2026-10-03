@@ -374,6 +374,7 @@ if(RAGE_BUILD_PORT)
         src/port/native_mesh_writer.c
         src/port/track_texture_snapshot.c
         src/port/modern/modern_renderer.c
+        src/port/modern/modern_fmv_zoom.c
         src/port/modern/modern_presentation_clock.c
         src/port/modern/modern_sky_reprojection.c
         src/port/modern/modern_overlay_state.c
@@ -413,6 +414,7 @@ if(RAGE_BUILD_PORT)
         src/port/fmv_str.c
         src/port/fmv_stream_index.c
         src/port/fmv_host.c
+        src/port/fmv_zoom.c
     )
     add_library(rage-port-legacy OBJECT ${RAGE_PORT_LEGACY_SOURCES})
     target_include_directories(rage-port-legacy PRIVATE src/port/include include)
