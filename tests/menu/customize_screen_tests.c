@@ -2,6 +2,7 @@
 #include "game/asset.h"
 #include "game/car.h"
 #include "game/menu.h"
+#include "game/race.h"
 
 static MenuWidgets s_menuWidgets;
 #include "game/render_state.h"
@@ -26,6 +27,7 @@ s32 GameMenuBusy;
 CarModelAsset *g_CarModelAsset;
 CarEntry *g_CarTable;
 s16 g_GrandPrixMode;
+RaceSession g_RaceSession;
 s32 g_MenuHandlerIndex;
 s32 g_MenuOutgoingHandlerIndex;
 s32 g_MenuOverlayPattern;
@@ -131,6 +133,7 @@ static void Reset(void) {
     g_CarModelAsset = &s_model;
     g_PlayerCarIndex = 3;
     g_GrandPrixMode = 1;
+    g_RaceSession.kind = RACE_SESSION_STANDARD;
     s_customize.option = 0;
     s_customize.popupScript = NULL;
     GameMenuBusy = 0;
@@ -159,6 +162,23 @@ int main(void) {
     g_PadPressed = PAD_UP;
     UpdateCustomizeScreen();
     CHECK(s_customize.option == 2);
+
+    /* A custom race runs in time-attack mode but keeps the DESIGN row, so
+     * its cars can be painted (#50). */
+    Reset();
+    g_GrandPrixMode = 0;
+    g_RaceSession.kind = RACE_SESSION_CUSTOM;
+    g_PadPressed = PAD_UP;
+    UpdateCustomizeScreen();
+    CHECK(s_customize.option == 3);
+
+    Reset();
+    g_GrandPrixMode = 0;
+    g_RaceSession.kind = RACE_SESSION_CUSTOM;
+    s_customize.option = 2;
+    g_PadPressed = PAD_CONFIRM;
+    UpdateCustomizeScreen();
+    CHECK(GameMenuBusy == 1 && s_lastCue == 2);
 
     Reset();
     g_CarTable = NULL;

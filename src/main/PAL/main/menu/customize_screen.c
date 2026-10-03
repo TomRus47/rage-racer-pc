@@ -30,6 +30,13 @@ enum CustomizeOption {
     CUSTOMIZE_OPTION_EXIT,
 };
 
+/* Grand Prix offers DESIGN (team logo, team name, paint) before EXIT; Time
+ * Attack has no DESIGN row, so its last row is the exit. A custom race paints
+ * its cars as well (#50). */
+static s32 CustomizeHasDesign(void) {
+    return g_GrandPrixMode != 0 || g_RaceSession.kind == RACE_SESSION_CUSTOM;
+}
+
 static void DrawTransmissionChoice(const Customize *customize,
                                    GameOrderingTableEntry *ot, s32 flash) {
     DrawMenuCursorBox(customize->modalCursor != 0 ? 0xDA : 0xB8, 0x68, 0x20, 0x20,
@@ -265,11 +272,11 @@ void UpdateCustomizeScreen(void) {
     ot = RENDER_OT_BASE;
     DrawCarNamePlate(MenuWidgetState());
     DrawMenuCarView();
-    exitOption = g_GrandPrixMode != 0 ? CUSTOMIZE_OPTION_EXIT
-                                     : CUSTOMIZE_OPTION_DESIGN;
+    exitOption = CustomizeHasDesign() ? CUSTOMIZE_OPTION_EXIT
+                                      : CUSTOMIZE_OPTION_DESIGN;
     customize->option =
         AddClampedMenuValue(customize->option, 0, 0, exitOption);
-    cmdList = g_GrandPrixMode != 0 ? g_CustomizeMenuScriptGp
+    cmdList = CustomizeHasDesign() ? g_CustomizeMenuScriptGp
                                    : g_CustomizeMenuScriptTimeAttack;
 
     if (GameMenuBusy == CUSTOMIZE_IDLE) {
