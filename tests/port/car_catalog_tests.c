@@ -22,7 +22,9 @@ CarEntry *g_CarTable = carTable;
 
 static int first[] = {0, 4, 7, 9, 14, 18, 21, 23, 26, 28, 29, 30, 31};
 
-static int VerifyShippedManualOnlyVariants(const char *path, char *error) {
+/* The nine cars retail sold manual-only offer automatic with the shipped
+ * catalogs (#62); cars.retail_manual_only puts them back to manual. */
+static int VerifyRetailManualOnlyVariants(const char *path, char *error) {
     static const int variants[] = {7, 8, 21, 22, 26, 27, 28, 30, 31};
     size_t i;
 
@@ -43,11 +45,20 @@ static int VerifyShippedManualOnlyVariants(const char *path, char *error) {
                     path, variant);
             return 0;
         }
-        memset(&asset, 0, sizeof(asset));
+        memset(&asset, 0, sizeof(asset)); /* retail: no automatic */
         g_CarTable[model].transmission = 0;
         CarCatalogApplyModelAvailability(model, variant - first[model], &asset);
+        if (asset.transmissionAvailable != 1 || g_CarTable[model].transmission != 0) {
+            fprintf(stderr, "%s variant %d does not offer automatic\n", path, variant);
+            return 0;
+        }
+        memset(&asset, 0, sizeof(asset));
+        CarCatalogSetRetailManualOnly(1);
+        CarCatalogApplyModelAvailability(model, variant - first[model], &asset);
+        CarCatalogSetRetailManualOnly(0);
         if (asset.transmissionAvailable != 0 || g_CarTable[model].transmission != 1) {
-            fprintf(stderr, "%s variant %d is not enforced manual-only\n", path, variant);
+            fprintf(stderr, "%s variant %d is not manual-only under the retail rule\n",
+                    path, variant);
             return 0;
         }
     }
@@ -200,8 +211,8 @@ int main(void) {
       if (retail.revLimit != 7654) return 1;
       remove("car_catalog_test.toml");
     }
-    if (!VerifyShippedManualOnlyVariants(RAGE_SOURCE_DIRECTORY "/cars.toml", error) ||
-        !VerifyShippedManualOnlyVariants(RAGE_SOURCE_DIRECTORY "/cars.ntscj.toml", error) ||
+    if (!VerifyRetailManualOnlyVariants(RAGE_SOURCE_DIRECTORY "/cars.toml", error) ||
+        !VerifyRetailManualOnlyVariants(RAGE_SOURCE_DIRECTORY "/cars.ntscj.toml", error) ||
         !VerifySqualdonAutomaticProfile(RAGE_SOURCE_DIRECTORY "/cars.toml", error) ||
         !VerifySqualdonAutomaticProfile(RAGE_SOURCE_DIRECTORY "/cars.ntscj.toml", error) ||
         !VerifyEarlyAutomaticBulshade(error)) {

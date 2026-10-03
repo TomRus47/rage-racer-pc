@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
     } else {
         fprintf(stderr, "rage-port: car catalog=%s\n", carCatalogPath);
     }
+    CarCatalogSetRetailManualOnly(RuntimeConfigEnabled("cars.retail_manual_only"));
     CarCatalogApplyMetadata();
     if (!MenuMusicPrepare()) {
         Psyz_AudioDestroy();

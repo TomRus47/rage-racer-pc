@@ -11,10 +11,12 @@ profile. A record may override its price, next-grade price, unlock class,
 maker, class, transmission policy, and any driving-specification field.
 
 `manual_only = true` prevents the automatic transmission from being selected
-and forces an existing save entry back to manual. The automatic fields remain
-editable so a mod can change that flag without having to invent a drivetrain
-setup. For these cars, `automatic_acceleration_scale` and `shift_points` are
-reconstructed port defaults; the generated file marks them with comments.
+and forces an existing save entry back to manual. The shipped catalogs set it
+to `false` everywhere, including the nine cars retail sold manual-only; for
+those, `automatic_acceleration_scale` and `shift_points` are reconstructed port
+defaults, marked with comments in the generated file. `retail_manual_only =
+true` under `[cars]` in rage-port.ini restores the original rule from the
+disc's own car data and ignores `manual_only`.
 The shift points are internal speed thresholds calculated from the peak-torque
 RPM and each gear ratio, with a 25% downshift hysteresis.
 

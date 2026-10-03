@@ -58,6 +58,11 @@ void CarCatalogClearOverrides(void);
 void CarCatalogApplyMetadata(void);
 void CarCatalogApplySpecification(int modelIndex, int grade,
                                   GameCarSpec *specification);
+/* Whether the original manual-only rule applies (cars.retail_manual_only).
+ * Off, the catalog decides; the shipped catalogs offer automatic on every
+ * car (#62). On, the retail model metadata decides and the catalog's
+ * manual_only is ignored. */
+void CarCatalogSetRetailManualOnly(int retail);
 void CarCatalogApplyModelAvailability(int modelIndex, int grade,
                                       struct CarModelAsset *asset);
 int CarCatalogUnlockClass(int modelIndex, int grade, int fallback);

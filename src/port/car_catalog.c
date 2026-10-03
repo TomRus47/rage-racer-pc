@@ -300,8 +300,20 @@ void CarCatalogApplySpecification(int modelIndex, int grade, GameCarSpec *specif
 #undef COPY_SCALAR
 }
 
+static int s_retailManualOnly;
+
+void CarCatalogSetRetailManualOnly(int retail) { s_retailManualOnly = retail != 0; }
+
 void CarCatalogApplyModelAvailability(int modelIndex, int grade, struct CarModelAsset *asset) {
-    RageCarCatalogEntry *entry = FindEntry(modelIndex, grade);
+    RageCarCatalogEntry *entry;
+    if (s_retailManualOnly) {
+        /* The serialized retail metadata says which bodies are manual-only. */
+        if (asset != NULL && asset->transmissionAvailable == 0 &&
+            g_CarTable != NULL && (unsigned)modelIndex < GAME_CAR_COUNT)
+            g_CarTable[modelIndex].transmission = 1;
+        return;
+    }
+    entry = FindEntry(modelIndex, grade);
     if (entry == NULL) return;
     if (!(entry->fields & RAGE_CAR_FIELD_MANUAL_ONLY)) return;
     if (asset != NULL) asset->transmissionAvailable = (u8)!entry->manualOnly;

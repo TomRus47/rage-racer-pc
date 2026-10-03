@@ -217,6 +217,7 @@ Display, content and storage settings:
 | `timing` | `standard` | `auto`, `pal`, `ntsc` | `auto` |
 | `content` | `car_names` | `international`, `japanese` | `international` |
 | `content` | `prologue` | `international`, `japanese` | `international` |
+| `cars` | `retail_manual_only` | `true` keeps the nine originally manual-only cars manual | `false` |
 | `disc` | `image` | Path to a CUE, Track 01 BIN or CHD | remembered picker choice |
 | `disc` | `choose` | `true` opens the picker again | `false` |
 | `mods` | `directory` | Extracted-asset or semantic mod directory | omitted |

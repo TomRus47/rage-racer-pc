@@ -53,6 +53,7 @@ static int LoadCarCatalogForSmoke(void) {
         fprintf(stderr, "rage-port: ignoring car catalog override: %s\n", error);
         CarCatalogClearOverrides();
     }
+    CarCatalogSetRetailManualOnly(RuntimeConfigEnabled("cars.retail_manual_only"));
     CarCatalogApplyMetadata();
     return 1;
 }
