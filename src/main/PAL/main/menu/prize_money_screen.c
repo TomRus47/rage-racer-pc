@@ -1,3 +1,4 @@
+#include "game/cd.h"
 #include "game/asset.h"
 #include "game/menu.h"
 #include "game/player_car_internal.h"
@@ -143,6 +144,7 @@ void UpdatePrizeMoneyScreenState(PrizeScreen *screen) {
         screen->state = screen->bonus == 0
                                  ? PRIZE_SCREEN_STATE_WAIT_TO_FINISH
                                  : PRIZE_SCREEN_STATE_WAIT_FOR_BONUS_CONFIRM;
+        if (screen->bonus == 0) StopReplayResultMusic();
         break;
     case PRIZE_SCREEN_STATE_WAIT_FOR_BONUS_CONFIRM:
         PlaySoundCue(SOUND_CUE_CONFIRM);
@@ -162,6 +164,7 @@ void UpdatePrizeMoneyScreenState(PrizeScreen *screen) {
             }
         }
         screen->state = PRIZE_SCREEN_STATE_WAIT_TO_FINISH;
+        StopReplayResultMusic();
         break;
     case PRIZE_SCREEN_STATE_WAIT_TO_FINISH: {
         /* The fanfare keeps running whether or not the player is pressing

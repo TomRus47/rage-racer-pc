@@ -1,3 +1,4 @@
+#include "rage/custom_music.h"
 #include <psyz/cd.h>
 
 #include "psyq/cd.h"
@@ -45,7 +46,7 @@ void TickCdAudio(void) {
         StepCdTrackRequest();
     }
 
-    if (Psyz_CdAudioPlaying()) {
+    if (CustomMusicActive() ? CustomMusicPlaying() : Psyz_CdAudioPlaying()) {
         g_Cd.playedSinceSelect = 1;
     }
 
@@ -56,7 +57,8 @@ void TickCdAudio(void) {
      * reached by the previous track must not start this one early: the race
      * BGM is seeked at scene entry and played only after the countdown. */
     if (CdAudioRequestsIdle(g_Cd.pendingTrack, g_Cd.pendingCommand) &&
-        g_Cd.playedSinceSelect && Psyz_CdAudioEnded() &&
+        g_Cd.playedSinceSelect &&
+        (CustomMusicActive() ? CustomMusicEnded() : Psyz_CdAudioEnded()) &&
         CdTrackIndexValid(g_Cd.currentTrack)) {
         if (g_SceneId == GAME_SCENE_BGM_SELECT) {
             g_CdTrackEnded = 1;

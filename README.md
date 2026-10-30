@@ -460,6 +460,25 @@ over the one beside the executable. That directory is
 `${XDG_CONFIG_HOME:-$HOME/.config}/rage-racer/` on Linux, and
 `%APPDATA%\Rage Racer\` on Windows.
 
+## Custom CD music
+
+Set `[audio] custom_music = true` in `rage-port.ini` and put replacements in
+`music/` beside the executable, named `track02.ogg` through `track17.ogg`.
+WAV files use the same names with `.wav`. Ogg Vorbis is supported; Ogg Opus is
+not. A readable Ogg takes precedence over a WAV for the same track. Missing or
+unreadable files fall back to the disc, so a replacement set can be partial.
+
+`custom_music_volume` accepts 0 to 100 and scales the game's CD volume and
+fades. A selected replacement waits for the normal play command, including a
+race retry's countdown. Pause and resume retain its position; a normal track
+restart plays it from the beginning. Post-race music stops at Time Attack's
+replay exit, or after the Grand Prix prize and bonus have finished counting.
+Returning from attract mode clears the replacement with the CD state.
+
+Decoded samples are retained in memory for replay. No external audio converter
+is needed at runtime. This replaces CD music, not the separate menu music
+or sound effects. No replacement soundtrack is included.
+
 ## Modding
 
 `rage-extract` unpacks the game archive into a directory you can edit. It needs

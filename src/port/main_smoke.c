@@ -1,3 +1,4 @@
+#include "rage/custom_music.h"
 #include <psyz.h>
 #include <psyz/video.h>
 #include <psyz/audio.h>
@@ -603,6 +604,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     ReportFinalState();
+    CustomMusicShutdown();
     Psyz_AudioDestroy();
     ModernShutdown();
     return EXIT_SUCCESS;

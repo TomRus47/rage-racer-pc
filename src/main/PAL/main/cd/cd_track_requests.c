@@ -1,3 +1,4 @@
+#include "rage/custom_music.h"
 #include "psyq/cd.h"
 #include "game/cd.h"
 #include "game/cd_internal.h"
@@ -22,6 +23,7 @@ static void WaitForTrackSeek(CdTrackRequestStep retryStep,
 
 static void FinishTrackRequest(int restoreVolume) {
     g_Cd.currentTrack = (u8)g_Cd.pendingTrack;
+    CustomMusicSelect(g_Cd.currentTrack);
     g_Cd.pendingTrack = -1;
     g_Cd.trackStep = CD_TRACK_WAIT_FOR_DRIVE;
     if (restoreVolume) {

@@ -506,3 +506,48 @@ set_tests_properties(race_cdda PROPERTIES LABELS e2e)
 set_tests_properties(engine_audio PROPERTIES LABELS e2e)
     set_tests_properties(engine_audio PROPERTIES TIMEOUT 210)
 endif()
+
+# Keep the native request-machine cases independent of host audio devices.
+foreach(target cd_pause_request_tests cd_audio_control_tests cd_track_requests_tests
+               cd_play_request_tests cd_audio_runtime_tests cd_volume_fade_tests)
+    target_sources(${target} PRIVATE ../support/custom_music_stubs.c)
+endforeach()
+
+add_executable(custom_music_tests
+    custom_music_tests.c ${CMAKE_SOURCE_DIR}/src/port/custom_music.c)
+target_include_directories(custom_music_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/port ${CMAKE_SOURCE_DIR}/src/port/include)
+target_compile_definitions(custom_music_tests PRIVATE
+    CUSTOM_MUSIC_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
+target_link_libraries(custom_music_tests PRIVATE SDL3::SDL3)
+if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(custom_music_tests PRIVATE ${RAGE_STRICT_WARNING_OPTIONS})
+endif()
+if(NOT MSVC)
+    target_link_libraries(custom_music_tests PRIVATE m)
+endif()
+add_test(NAME custom_music COMMAND custom_music_tests)
+set_tests_properties(custom_music PROPERTIES LABELS "unit;functional" TIMEOUT 10)
+
+add_executable(custom_music_cd_tests custom_music_cd_tests.c
+    ${CMAKE_SOURCE_DIR}/src/main/PAL/main/cd/cd_audio.c
+    ${CMAKE_SOURCE_DIR}/src/main/PAL/main/cd/cd_audio_control.c
+    ${CMAKE_SOURCE_DIR}/src/main/PAL/main/cd/cd_play_request.c
+    ${CMAKE_SOURCE_DIR}/src/main/PAL/main/cd/cd_pause_request.c
+    ${CMAKE_SOURCE_DIR}/src/main/PAL/main/cd/cd_track_requests.c
+    ${CMAKE_SOURCE_DIR}/src/main/PAL/main/cd/cd_volume_fade.c)
+target_include_directories(custom_music_cd_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/port/include
+    ${CMAKE_SOURCE_DIR}/external/psyz/psyz/include
+    ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(custom_music_cd_tests PRIVATE __psyz=1)
+if(MSVC)
+    target_compile_options(custom_music_cd_tests PRIVATE
+        "/FI${CMAKE_SOURCE_DIR}/src/port/include/rage/compat.h")
+else()
+    target_compile_options(custom_music_cd_tests PRIVATE
+        "${RAGE_FORCE_INCLUDE_OPTION}${CMAKE_SOURCE_DIR}/src/port/include/rage/compat.h"
+        ${RAGE_STRICT_WARNING_OPTIONS})
+endif()
+add_test(NAME custom_music_cd COMMAND custom_music_cd_tests)
+set_tests_properties(custom_music_cd PROPERTIES LABELS "unit;functional")

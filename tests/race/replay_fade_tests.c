@@ -17,6 +17,8 @@ s32 g_SceneId;
 s16 g_GrandPrixMode;
 
 static s32 s_AudioFade;
+static s32 s_ResultStops;
+void StopReplayResultMusic(void) { s_ResultStops++; }
 static s32 s_FadeDraws;
 static s32 s_FadeColor;
 static s32 s_FadeTpage;
@@ -37,6 +39,7 @@ void DrawSeriesClearedWash(s32 progress, s32 fade) {
 }
 
 static void ResetState(void) {
+    s_ResultStops = 0;
     g_FadeLevel = 0;
     g_FadeStep = 0;
     g_Replay.endingWash = 99;
@@ -129,6 +132,7 @@ static void TestOpaqueFadeSelectsResultScene(void) {
     assert(g_FadeLevel == 257);
     assert(g_MirrorMode == 0);
     assert(g_SceneId == 0x12);
+    assert(s_ResultStops == 0);
     assert(s_FadeDraws == 1 && s_FadeColor == 257 &&
            s_FadeTpage == 0x49);
 
@@ -139,6 +143,7 @@ static void TestOpaqueFadeSelectsResultScene(void) {
     assert(UpdateReplayFade());
 
     assert(g_SceneId == 0x14);
+    assert(s_ResultStops == 1);
 
     ResetState();
     g_FadeLevel = 257;

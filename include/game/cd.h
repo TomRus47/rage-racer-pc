@@ -96,6 +96,7 @@ void RequestCdTrack(s32 track);
 void StartCdAudio(void);
 /* Capture the current position, then CdlPause. */
 void PauseCdAudio(void);
+void StopReplayResultMusic(void);
 /* Undo the pause: replay the track when the pause crossed a track boundary. */
 void ResumeCdAudio(void);
 /* Drop any pending track/command and reset the current track index to 2. */

@@ -1,9 +1,17 @@
+#include "rage/custom_music.h"
 #include "game/cd.h"
 #include "game/cd_internal.h"
 #include "psyq/cd.h"
 
 void StepCdPlayRequest(void) {
     s32 syncResult;
+
+    if (CustomMusicActive()) {
+        CustomMusicPlay();
+        g_Cd.pendingCommand = CD_COMMAND_NONE;
+        g_Cd.commandStep = CD_PLAY_WAIT_FOR_DRIVE;
+        return;
+    }
 
     switch (g_Cd.commandStep) {
     case CD_PLAY_WAIT_FOR_DRIVE:

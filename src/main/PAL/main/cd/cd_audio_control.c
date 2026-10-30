@@ -1,3 +1,4 @@
+#include "rage/custom_music.h"
 #include "game/cd.h"
 #include "game/cd_internal.h"
 
@@ -21,6 +22,7 @@ void RequestCdTrack(s32 track) {
     if (!CdTrackIndexValid(track)) {
         return;
     }
+    CustomMusicPause();
     g_Cd.pendingTrack = track;
     g_Cd.trackStep = CD_TRACK_WAIT_FOR_DRIVE;
     QueueCdCommand(CD_COMMAND_NONE, CD_PLAY_WAIT_FOR_DRIVE);
@@ -48,9 +50,21 @@ void ResumeCdAudio(void) {
 }
 
 void ResetCdAudioState(void) {
+    CustomMusicShutdown();
     g_Cd.pendingTrack = -1;
     g_Cd.trackStep = CD_TRACK_WAIT_FOR_DRIVE;
     QueueCdCommand(CD_COMMAND_NONE, CD_PLAY_WAIT_FOR_DRIVE);
     g_Cd.currentTrack = CD_INITIAL_TRACK;
+    g_Cd.playedSinceSelect = 0;
+}
+
+/* The post-race tracks must not loop into a silent results screen or the
+ * next race. Both playback paths are paused and EOF loses its current track. */
+void StopReplayResultMusic(void) {
+    if (g_Cd.currentTrack != 12 && g_Cd.currentTrack != 13 &&
+        g_Cd.currentTrack != 16) return;
+    CustomMusicPause();
+    PauseCdAudio();
+    g_Cd.currentTrack = 0xff;
     g_Cd.playedSinceSelect = 0;
 }

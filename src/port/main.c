@@ -24,6 +24,7 @@
 #include "car_export.h"
 #include "platform_paths.h"
 #include "menu_music_runtime.h"
+#include "rage/custom_music.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -161,12 +162,14 @@ int main(int argc, char **argv) {
     CarCatalogSetRetailManualOnly(RuntimeConfigEnabled("cars.retail_manual_only"));
     CarCatalogApplyMetadata();
     if (!MenuMusicPrepare()) {
+        CustomMusicShutdown();
         Psyz_AudioDestroy();
         ModernShutdown();
         return EXIT_FAILURE;
     }
     MainLoop();
     Psyz_PcmMusicUnload();
+    CustomMusicShutdown();
     Psyz_AudioDestroy();
     ModernShutdown();
     return EXIT_SUCCESS;

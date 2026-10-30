@@ -1,3 +1,4 @@
+#include "rage/custom_music.h"
 #include "game/cd.h"
 #include "game/cd_internal.h"
 #include "psyq/cd.h"
@@ -24,6 +25,14 @@ static void CaptureCdPauseLocation(void) {
 
 void StepCdPauseRequest(void) {
     s32 syncResult;
+
+    if (CustomMusicActive()) {
+        CustomMusicPause();
+        g_Cd.restart = 0;
+        g_Cd.pendingCommand = CD_COMMAND_NONE;
+        g_Cd.commandStep = CD_PAUSE_WAIT_FOR_DRIVE;
+        return;
+    }
 
     switch (g_Cd.commandStep) {
     case CD_PAUSE_WAIT_FOR_DRIVE:

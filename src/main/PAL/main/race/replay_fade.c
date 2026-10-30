@@ -55,6 +55,7 @@ s32 UpdateReplayFade(void) {
         g_FadeLevel = StepFade(
             g_FadeLevel, g_FadeStep, REPLAY_OPAQUE_FADE);
         if (g_FadeLevel >= REPLAY_OPAQUE_FADE) {
+            if (g_GrandPrixMode == 0) StopReplayResultMusic();
             g_MirrorMode = 0;
             g_SceneId = g_GrandPrixMode == 0
                 ? GAME_SCENE_ENTER_RECORD_ENTRY

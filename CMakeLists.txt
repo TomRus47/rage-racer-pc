@@ -422,6 +422,7 @@ if(RAGE_BUILD_PORT)
         src/port/archive_index.c
         src/port/bios_file.c
         src/port/cdda_file.c
+        src/port/custom_music.c
         src/port/disc_cue.c
         src/port/disc_discovery.c
         src/port/disc_iso.c

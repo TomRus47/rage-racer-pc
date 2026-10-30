@@ -39,6 +39,8 @@ u16 g_PadHeld;
 
 /* The screen only draws and plays cues through these; what it draws is not
  * this test's subject, but whether it asked to is. */
+static int s_resultStops;
+void StopReplayResultMusic(void) { s_resultStops++; }
 static int s_bgmRequested;
 static int s_classAdvanced;
 static int s_fanfareTicks;
@@ -78,6 +80,7 @@ static void Check(int condition, const char *what, s32 got, s32 wanted) {
 }
 
 static void Reset(s32 prize, s32 bonus) {
+    s_resultStops = 0;
     memset(&s_progress, 0, sizeof(s_progress));
     g_RaceProgress = &s_progress;
     s_screen.state = PRIZE_SCREEN_STATE_INTRO_FADE_IN;
@@ -122,6 +125,18 @@ static int RunToEnd(int hold, int budget) {
 }
 
 int main(void) {
+    /* Post-race music lasts through money counting, then stops once. */
+    Reset(0, 0);
+    s_screen.state = PRIZE_SCREEN_STATE_COUNT_PRIZE;
+    UpdatePrizeMoneyScreenState(&s_screen);
+    Check(s_resultStops == 1, "no-bonus result stops music", s_resultStops, 1);
+    Reset(0, 50);
+    s_screen.state = PRIZE_SCREEN_STATE_COUNT_PRIZE;
+    UpdatePrizeMoneyScreenState(&s_screen);
+    Check(s_resultStops == 0, "bonus keeps result music", s_resultStops, 0);
+    s_screen.state = PRIZE_SCREEN_STATE_COUNT_BONUS;
+    UpdatePrizeMoneyScreenState(&s_screen);
+    Check(s_resultStops == 1, "completed bonus stops music", s_resultStops, 1);
     /* The opening panels retain the original frame-exact slide sequence. */
     {
         int i;

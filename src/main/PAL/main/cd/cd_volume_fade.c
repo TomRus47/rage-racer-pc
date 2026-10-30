@@ -1,3 +1,4 @@
+#include "rage/custom_music.h"
 #include "game/cd.h"
 #include "game/cd_internal.h"
 
@@ -58,4 +59,11 @@ void StepCdVolumeFade(void) {
     mix[2] = g_Cd.mix.rr / CD_MIX_FIXED_ONE;
     mix[3] = g_Cd.mix.rl / CD_MIX_FIXED_ONE;
     CdMix(mix);
+    /* Preserve the fade's level for a replacement, including a selected
+     * stream that has not started yet. */
+    {
+        s32 left = mix[0] + mix[3];
+        s32 right = mix[2] + mix[1];
+        CustomMusicSetVolume(left > right ? left : right);
+    }
 }
