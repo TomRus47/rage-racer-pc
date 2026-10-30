@@ -4,7 +4,6 @@
 #include "game/state.h"
 
 enum {
-    PAD_MAPPING_STRIDE = 8,
     SHIFT_UP_MAPPING_SLOT = 4,
     SHIFT_DOWN_MAPPING_SLOT = 5,
     AUTO_SHIFT_COOLDOWN_FRAMES = 25,
@@ -14,19 +13,22 @@ enum {
 };
 
 static void ShiftManualGears(GameCarDrive *drive, s32 topGear,
-                             s32 mappingBase) {
+                             int useAlternateMapping) {
     /* Retail accepts another upshift only after its clutch counter reaches
      * zero, but accepts a downshift immediately. Preserve that asymmetric
      * behaviour: its eleven race frames are about 440 ms on PAL and 367 ms on
      * NTSC, so comparing the two releases by wall-clock time is misleading. */
-    if ((g_PadPressed &
-         g_PadButtonMapping[SHIFT_UP_MAPPING_SLOT + mappingBase]) != 0 &&
+    u16 up = useAlternateMapping ? PAD_R1
+        : g_PadButtonMapping[SHIFT_UP_MAPPING_SLOT];
+    u16 down = useAlternateMapping ? PAD_L1
+        : g_PadButtonMapping[SHIFT_DOWN_MAPPING_SLOT];
+
+    if ((g_PadPressed & up) != 0 &&
         drive->gear < topGear && drive->clutch == 0) {
         drive->gear++;
         g_SteerHoldFrames = 0;
     }
-    if ((g_PadPressed &
-         g_PadButtonMapping[SHIFT_DOWN_MAPPING_SLOT + mappingBase]) != 0 &&
+    if ((g_PadPressed & down) != 0 &&
         drive->gear > CAR_FIRST_FORWARD_GEAR) {
         drive->gear--;
         g_SteerHoldFrames = 0;
@@ -87,9 +89,10 @@ void ShiftPlayerGears(PlayerCarRuntime *car, int useAlternateMapping) {
 
     drive->gear = ClampCarGear(drive->gear, topGear);
     if (drive->manual != 0) {
-        s32 mappingBase = useAlternateMapping ? PAD_MAPPING_STRIDE : 0;
-
-        ShiftManualGears(drive, topGear, mappingBase);
+        /* Host analog pads use the NeGcon steering/pedal packet, but retain
+         * logical shoulder buttons. Retail NeGcon presets can map these slots
+         * to the d-pad instead. */
+        ShiftManualGears(drive, topGear, useAlternateMapping);
     } else {
         ShiftAutomaticGears(car, topGear);
     }

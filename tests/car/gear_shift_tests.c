@@ -54,8 +54,8 @@ static void BuildSpec(void) {
     g_PadButtonMapping[4] = SHIFT_UP;
     g_PadButtonMapping[5] = SHIFT_DOWN;
     /* A NeGcon's two are eight slots along. */
-    g_PadButtonMapping[12] = 0x0100;
-    g_PadButtonMapping[13] = 0x0200;
+    g_PadButtonMapping[12] = PAD_UP;
+    g_PadButtonMapping[13] = PAD_DOWN;
 }
 
 static void Place(int manual, s32 gear, s32 speed) {
@@ -119,18 +119,35 @@ static void ManualTests(void) {
     Check(s_car.drive.gear == 2, "downshift ignores the clutch",
           s_car.drive.gear, 2);
 
-    /* A NeGcon's buttons are at the other pair of slots, and the normal pad's
-     * do nothing on one. */
+    /* Analog host pads use NeGcon steering and pedals, while shifting stays
+     * on the logical shoulders. D-pad presses must not select a gear. */
+    for (int alternate = 0; alternate <= 1; alternate++) {
+        Place(1, 3, 2000);
+        g_PadPressed = PAD_R1;
+        ShiftPlayerGears(&s_car, alternate);
+        Check(s_car.drive.gear == 4, "shoulder up", s_car.drive.gear, 4);
+        Place(1, 3, 2000);
+        g_PadPressed = PAD_L1;
+        ShiftPlayerGears(&s_car, alternate);
+        Check(s_car.drive.gear == 2, "shoulder down", s_car.drive.gear, 2);
+    }
+    for (int direction = 0; direction < 2; direction++) {
+        Place(1, 3, 2000);
+        g_PadPressed = direction ? PAD_UP : PAD_DOWN;
+        ShiftPlayerGears(&s_car, 1);
+        Check(s_car.drive.gear == 3, "analog d-pad does not shift",
+              s_car.drive.gear, 3);
+    }
     Place(1, 3, 2000);
-    g_PadPressed = 0x0100;
+    s_car.drive.clutch = 5;
+    g_PadPressed = PAD_R1;
     ShiftPlayerGears(&s_car, 1);
-    Check(s_car.drive.gear == 4, "negcon up", s_car.drive.gear, 4);
-
-    Place(1, 3, 2000);
-    g_PadPressed = SHIFT_UP;
-    ShiftPlayerGears(&s_car, 1);
-    Check(s_car.drive.gear == 3, "a pad button does nothing on a negcon",
+    Check(s_car.drive.gear == 3, "analog clutch blocks upshift",
           s_car.drive.gear, 3);
+    g_PadPressed = PAD_L1;
+    ShiftPlayerGears(&s_car, 1);
+    Check(s_car.drive.gear == 2, "analog downshift ignores clutch",
+          s_car.drive.gear, 2);
 
     Place(1, 0, 0);
     ShiftPlayerGears(&s_car, 0);
