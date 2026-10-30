@@ -24,6 +24,7 @@ int MenuCarViewSettled(void) {
  */
 void MenuSpinToCar(s32 *shownCar, s32 fromIndex, s32 toIndex, s32 newTarget) {
     s32 previousTarget;
+    s32 startAngle;
 
     if (shownCar == NULL || (u32)toIndex >= GAME_CAR_COUNT) {
         return;
@@ -34,12 +35,16 @@ void MenuSpinToCar(s32 *shownCar, s32 fromIndex, s32 toIndex, s32 newTarget) {
     PlaySoundCue(8);
     *shownCar = toIndex;
     previousTarget = g_MenuViewAngleTarget;
+    /* The settle window accepts input before the easing reaches its target.
+     * Start the next movement from that target, without carrying its tail
+     * through a direction change and showing the same car again. */
+    startAngle = MenuCarViewSettled() ? previousTarget : g_MenuViewAngle;
     g_CarSwapFromIndex = fromIndex;
     g_MenuViewAngleTarget = newTarget;
     MenuWidgetState()->lowerAltPanelStep = -1;
     g_CarSwapToIndex = *shownCar;
     g_MenuViewAngle = RebaseCarouselValue(
-        g_MenuViewAngle, previousTarget, MENU_CAR_VIEW_REBASE_SPAN);
+        startAngle, previousTarget, MENU_CAR_VIEW_REBASE_SPAN);
     /* Reversing shortly after the model swap must not put the next swap
      * directly ahead of us. Otherwise a brief held direction completes one
      * swap immediately and starts a second on the following frame. Move by

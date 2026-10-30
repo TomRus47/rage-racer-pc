@@ -86,10 +86,42 @@ static int TestQuickDirectionChange(void) {
     return 0;
 }
 
+/* Both directions accept a new selection while easing is still inside the
+ * settle window. Its remaining distance belongs to the completed movement. */
+static int TestSettledDirectionChanges(void) {
+    const s32 tails[] = {0, 1, MENU_CAR_VIEW_SETTLE_WINDOW - 1,
+                         MENU_CAR_VIEW_SETTLE_WINDOW};
+    for (int direction = -1; direction <= 1; direction += 2) {
+        for (unsigned int tail = 0; tail < sizeof(tails) / sizeof(tails[0]); tail++) {
+            for (int next = -1; next <= 1; next += 2) {
+                s32 shown = 5;
+                s32 target = next < 0 ? 0 : MENU_CAR_VIEW_RIGHT_TARGET;
+                ResetCalls();
+                g_MenuViewAngleTarget = direction < 0
+                    ? 0 : MENU_CAR_VIEW_RIGHT_TARGET;
+                g_MenuViewAngle = g_MenuViewAngleTarget - direction * tails[tail];
+                CHECK(MenuCarViewSettled());
+                MenuSpinToCar(&shown, 5, 5 + next, target);
+                CHECK(g_MenuViewAngle == MENU_CAR_VIEW_REBASE_SPAN);
+                CHECK(g_CarSwapFromIndex == 5 && g_CarSwapToIndex == 5 + next);
+                CHECK(s_requestCount == 1);
+                CHECK(!ShowroomCarAtSwapPoint(g_MenuViewAngle, target,
+                                              g_CarSwapToIndex));
+                for (int frame = 0; frame < 120 && g_CarSwapToIndex >= 0; frame++)
+                    AdvanceCarousel();
+                CHECK(g_CarSwapToIndex == -1 && g_CarSwapFromIndex == 5 + next);
+                CHECK(s_requestCount == 1);
+            }
+        }
+    }
+    return 0;
+}
+
 int main(void) {
     s32 shownCar = 2;
 
     if (TestQuickDirectionChange()) return 1;
+    if (TestSettledDirectionChanges()) return 1;
 
     g_MenuViewAngleTarget = 500000;
     g_MenuViewAngle = 500000 + MENU_CAR_VIEW_SETTLE_WINDOW;
@@ -107,7 +139,7 @@ int main(void) {
     CHECK(s_soundCount == 1);
     CHECK(g_CarSwapFromIndex == 2 && g_CarSwapToIndex == 6);
     CHECK(g_MenuViewAngleTarget == 1200000);
-    CHECK(g_MenuViewAngle == 200000);
+    CHECK(g_MenuViewAngle == MENU_CAR_VIEW_REBASE_SPAN);
     CHECK(s_menuWidgets.lowerAltPanelStep == -1);
 
     ResetCalls();
